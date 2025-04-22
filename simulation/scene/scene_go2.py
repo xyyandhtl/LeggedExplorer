@@ -17,7 +17,6 @@ from common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
 
 @configclass
 class Go2SimCfg(InteractiveSceneCfg):
-    init_pos = (0, 0, 0)    # mp3d scene search log: mp3d episode init_pos, replace it
     # ground plane
     ground = AssetBaseCfg(prim_path="/World/ground",
                           spawn=sim_utils.GroundPlaneCfg(color=(0.1, 0.1, 0.1), size=(300., 300.)),
@@ -40,13 +39,13 @@ class Go2SimCfg(InteractiveSceneCfg):
             length=100, radius=0.3, treat_as_line=False, intensity=10000.0
         ),
     )
-    cylinder_light.init_state.pos = (init_pos[0], init_pos[1], init_pos[2] + 2.0)
+    cylinder_light.init_state.pos = (0, 0, 2.0)
 
     # Go2 Robot
     unitree_go2: ArticulationCfg = UNITREE_GO2_CFG.replace(
         prim_path="{ENV_REGEX_NS}/Go2",
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(init_pos[0], init_pos[1], init_pos[2] + 0.40),
+            pos=(0, 0, 0.40),
             joint_pos={
                 ".*L_hip_joint": 0.1,
                 ".*R_hip_joint": -0.1,
@@ -63,19 +62,6 @@ class Go2SimCfg(InteractiveSceneCfg):
 
     # Go2 foot contact sensor
     contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Go2/.*_foot", history_length=3, track_air_time=True)
-
-    # Go2 height scanner
-    height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Go2/base",
-        offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 0.5)),
-        attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
-        debug_vis=False,
-        # mesh_prim_paths=["/World/Mp3d/mesh"],
-        # mesh_prim_paths=["/World/Warehouse"],
-        mesh_prim_paths=["/World/ground"],
-    )
-    del init_pos
 
 @configclass
 class ActionsCfg:
@@ -108,9 +94,9 @@ class ObservationsCfg:
         actions = ObsTerm(func=mdp.last_action)
         
         # Height scan
-        height_scan = ObsTerm(func=mdp.height_scan,
-                              params={"sensor_cfg": SceneEntityCfg("height_scanner")},
-                              clip=(-1.0, 1.0))
+        # height_scan = ObsTerm(func=mdp.height_scan,
+        #                       params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+        #                       clip=(-1.0, 1.0))
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -129,6 +115,8 @@ class CommandsCfg:
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
             lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0), heading=(0, 0)
         ),
+        # heading_command=False,    # for lab1.2
+        # rel_standing_envs=0.0,
     )
 
 
@@ -170,7 +158,6 @@ class Go2RSLEnvCfg(ManagerBasedRLEnvCfg):
         self.actions.joint_pos.scale = 0.25
         self.observations.policy.base_ang_vel.scale = 0.25
         self.observations.policy.joint_vel.scale = 0.05
-        # self.observations.policy.base_vel_cmd.scale = [1, 1, ]
 
-        if self.scene.height_scanner is not None:
-            self.scene.height_scanner.update_period = self.decimation * self.sim.dt
+        # if self.scene.height_scanner is not None:
+        #     self.scene.height_scanner.update_period = self.decimation * self.sim.dt

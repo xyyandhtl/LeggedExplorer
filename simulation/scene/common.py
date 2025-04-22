@@ -40,26 +40,15 @@ def camera_follow(env, robot_prim='unitree_a1'):
         yaw = rotation.as_euler('zyx')[0]
         yaw_rotation = R.from_euler('z', yaw).as_matrix()
         set_camera_view(
-            yaw_rotation.dot(np.asarray([-2, 0.0, 0.8])) + robot_position,
+            yaw_rotation.dot(np.asarray([-2, 0.0, 0.4])) + robot_position,
             robot_position
         )
 
-# todo: user-defined env with flexable rl env, robot and usd environment
-def get_rsl_env(cfg, robot_name, policy_name):
+# not-in-use: gym pre-defined env
+def get_rsl_env_gym_registered(cfg, robot_name, policy_name):
     import gymnasium as gym
-    cfg.observations.policy.height_scan = None
+    # cfg.observations.policy.height_scan = None
     env = gym.make(f"Isaac-Velocity-Flat-Unitree-{robot_env_prim_map[robot_name]}-v0", cfg=cfg)
-    if policy_name == 'him_loco':
-        from locomotion.env_cfg.him_env import HIMLocoEnvWrapper
-        env = HIMLocoEnvWrapper(env)
-    elif policy_name == 'wmp_loco':
-        from locomotion.env_cfg.wmp_env import WMPObsEnvWrapper
-        env = WMPObsEnvWrapper(env)
-    else:
-        raise NotImplementedError
-    return env
-
-def get_rsl_policy(policy_name='him_loco'):
     if policy_name == 'him_loco':
         from locomotion.env_cfg.him_env import HIMLocoEnvWrapper
         env = HIMLocoEnvWrapper(env)

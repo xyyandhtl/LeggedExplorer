@@ -5,11 +5,22 @@ robot_name: a1
 num_envs: 1
 freq: 50 # can only be divisible by 200
 camera_follow: True
-env_name: obstacle-dense
-#env_name: office
-#env_name: full-warehouse
-#env_name: matterport3d
-episode_idx: 0
+
+#env_name: obstacle-dense
+#env_name: omni
+#env_name: carla
+env_name: matterport3d
+
+# for omni
+#scene_id: Simple_Warehouse/warehouse
+#scene_id: Simple_Warehouse/warehouse_with_forklifts
+#scene_id: Simple_Warehouse/warehouse_multiple_shelves
+#scene_id: Simple_Warehouse/full_warehouse
+#scene_id: Hospital/hospital
+#scene_id: Office/office
+# for matterport3d
+scene_id: GdvgFV5R1Z5
+#scene_id: 2n8kARJN3HM
 
 sensor:
   enable_lidar: True
@@ -26,3 +37,9 @@ sim_app:
 
 policy: him_loco
 policy_device: cuda:0
+
+init_pos: [0, 0, 0.5]
+#init_rot: [0.707, 0.0, 0.0, -0.707]
+init_rot: [1.0, 0.0, 0.0, 0.0]
+view_pos: [0, 0, 3.0]
+view_rot: [0, 0, 0]   # euler degree angles

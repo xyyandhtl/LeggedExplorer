@@ -125,3 +125,15 @@ class SensorManagerA1:
             camera.add_distance_to_image_plane_to_frame()
             cameras.append(camera)
         return cameras
+
+def create_view_camera(pos, rot):
+    from omni.isaac.core.utils.prims import create_prim, set_prim_property
+    create_prim("/World/CustomCamera", "Camera",
+                translation=np.array(pos),
+                orientation=rot_utils.euler_angles_to_quats(np.array(rot), degrees=True))
+    # 设置焦距
+    set_prim_property(
+        prim_path="/World/CustomCamera",
+        property_name="focalLength",
+        property_value=30.0
+    )

@@ -16,13 +16,12 @@ from .common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
 
 @configclass
 class A1SimCfg(InteractiveSceneCfg):
-    init_pos = (0, 0, 0)    # mp3d scene search log: mp3d episode init_pos, replace it
     # ground plane
-    ground = AssetBaseCfg(prim_path="/World/ground",
-                          spawn=sim_utils.GroundPlaneCfg(color=(0.1, 0.1, 0.1), size=(300., 300.)),
-                          init_state=AssetBaseCfg.InitialStateCfg(
-                              pos=(0, 0, 1e-4)
-                          ))
+    # ground = AssetBaseCfg(prim_path="/World/ground",
+    #                       spawn=sim_utils.GroundPlaneCfg(color=(0.1, 0.1, 0.1), size=(300., 300.)),
+    #                       init_state=AssetBaseCfg.InitialStateCfg(
+    #                           pos=(0, 0, 0.02)
+    #                       ))
     
     # Lights
     light = AssetBaseCfg(
@@ -39,13 +38,13 @@ class A1SimCfg(InteractiveSceneCfg):
             length=100, radius=0.3, treat_as_line=False, intensity=10000.0
         ),
     )
-    cylinder_light.init_state.pos = (init_pos[0], init_pos[1], init_pos[2] + 2.0)
+    cylinder_light.init_state.pos = (0, 0, 2.0)
 
     # A1 Robot
     unitree_a1: ArticulationCfg = UNITREE_A1_CFG.replace(
         prim_path="{ENV_REGEX_NS}/A1",
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(init_pos[0], init_pos[1], init_pos[2] + 0.45),  # init height 0.4
+            pos=(0, 0, 0.45),  # init height 0.4
             joint_pos={
                 ".*L_hip_joint": 0.1,
                 ".*R_hip_joint": -0.1,
@@ -62,19 +61,6 @@ class A1SimCfg(InteractiveSceneCfg):
 
     # A1 foot contact sensor
     contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/A1/.*_foot", history_length=3, track_air_time=True)
-
-    # A1 height scanner
-    height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/A1/trunk",
-        offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 0.5)),
-        attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
-        debug_vis=False,
-        # mesh_prim_paths=["/World/Mp3d/mesh"],
-        # mesh_prim_paths=["/World/Warehouse"],
-        mesh_prim_paths=["/World/ground"],
-    )
-    del init_pos
 
 @configclass
 class ActionsCfg:
@@ -105,29 +91,10 @@ class ObservationsCfg:
                                     noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05))
 
         joint_pos = ObsTerm(func=mdp.joint_pos_rel,
-                            params={"asset_cfg": SceneEntityCfg(name="unitree_a1",
-            #                                                     joint_names=[
-            # # 关节顺序明确指定（按 FL, FR, RL, RR 排列）
-            # "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
-            # "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
-            # "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
-            # "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",]
-                                                                )})
+                            params={"asset_cfg": SceneEntityCfg(name="unitree_a1",)})
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, scale=0.05,
-                            params={"asset_cfg": SceneEntityCfg(name="unitree_a1",
-        #                                                         joint_names=[
-        #     # 关节顺序明确指定（按 FL, FR, RL, RR 排列）
-        #     "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
-        #     "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
-        #     "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
-        #     "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",]
-                                                                )})
+                            params={"asset_cfg": SceneEntityCfg(name="unitree_a1",)})
         actions = ObsTerm(func=mdp.last_action)
-        
-        # Height scan
-        height_scan = ObsTerm(func=mdp.height_scan,
-                              params={"sensor_cfg": SceneEntityCfg("height_scanner")},
-                              clip=(-1.0, 1.0))
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -168,8 +135,8 @@ class A1RSLEnvCfg(ManagerBasedRLEnvCfg):
 
     def __post_init__(self):
         # viewer settings
-        self.viewer.eye = [-2, 0.0, 0.8]
-        self.viewer.lookat = [0.0, 0.0, 0.0]
+        self.viewer.eye = (-2, 0.0, 0.8)
+        self.viewer.lookat = (0.0, 0.0, 0.0)
 
         # step settings
         self.decimation = 8  # step
@@ -178,17 +145,9 @@ class A1RSLEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.dt = 0.005  #  0.005  # sim step every
         self.sim.render_interval = self.decimation
         self.sim.disable_contact_processing = True
-        self.sim.render.antialiasing_mode = None
+        self.sim.render.antialiasing_mode = None    # not supported in lab1.2
         # self.sim.physics_material = self.scene.terrain.physics_material
 
         # settings for rsl env control
         self.episode_length_s = 20.0 # can be ignored
         self.is_finite_horizon = False
-        # self.actions.joint_pos.scale = 0.25
-        # self.observations.policy.base_lin_vel.scale = 2.0
-        # self.observations.policy.base_ang_vel.scale = 0.25
-        # self.observations.policy.joint_vel.scale = 0.05
-        # self.observations.policy.base_vel_cmd.scale = (2.0, 2.0, 1.0)
-
-        if self.scene.height_scanner is not None:
-            self.scene.height_scanner.update_period = self.decimation * self.sim.dt

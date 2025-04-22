@@ -20,24 +20,26 @@ def run_simulator(cfg):
     # isaacsim extensions can only be import after app start?
     import omni
     import carb
-    import simulation.env.sim_env as sim_env
-    import simulation.env.matterport3d_env as matterport3d_env
     import simulation.agent.agent_sensors as agent_sensors
     import simulation.agent.agent_ctrl as agent_ctrl
     from simulation.scene.common import camera_follow
+    from omni.isaac.lab.envs import ManagerBasedRLEnv
+    print(f'use cfg {cfg}')
 
     if cfg.robot_name == 'go2':
         from simulation.scene.scene_go2 import Go2RSLEnvCfg
         # Go2 Environment setup
         env_cfg = Go2RSLEnvCfg()
         print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_go2}')
-        sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
+        # sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
     elif cfg.robot_name == 'a1':
         from simulation.scene.scene_a1 import A1RSLEnvCfg
         # Go2 Environment setup
         env_cfg = A1RSLEnvCfg()
+        env_cfg.scene.unitree_a1.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.unitree_a1.init_state.rot = tuple(cfg.init_rot)
         print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_a1}')
-        sm = agent_sensors.SensorManagerA1(cfg.num_envs)
+        # sm = agent_sensors.SensorManagerA1(cfg.num_envs)
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
     env_cfg.scene.num_envs = cfg.num_envs
@@ -49,41 +51,46 @@ def run_simulator(cfg):
     print(f'{cfg.robot_name} env_cfg policy: {env_cfg.observations.policy}')
     print(f'{cfg.robot_name} env_cfg actuator: {env_cfg.actions}')
 
-    from simulation.scene.common import get_rsl_env
-    env = get_rsl_env(env_cfg, robot_name=cfg.robot_name, policy_name=cfg.policy)
     if cfg.policy == "wmp_loco":
+        # from locomotion.env_cfg.wmp_env import WMPObsEnvWrapper
+        # env = ManagerBasedRLEnv(env_cfg)
+        # env = WMPObsEnvWrapper(env)
+        # from locomotion.policy.wmp_loco import load_policy_wmp
+        # policy = load_policy_wmp(robot_name=cfg.robot_name, device=cfg.policy_device)
         raise NotImplementedError
     elif cfg.policy == "him_loco":
+        from locomotion.env_cfg.him_env import HIMLocoEnvWrapper
+        env = ManagerBasedRLEnv(env_cfg)
+        env = HIMLocoEnvWrapper(env)
         from locomotion.policy.him_loco import load_policy_him
         policy = load_policy_him(robot_name=cfg.robot_name, device=cfg.policy_device)
     else:
         raise NotImplementedError(f'Policy {cfg.policy} not implemented')
 
     # Sensor setup
+    agent_sensors.create_view_camera(cfg.view_pos, cfg.view_rot)
     # cameras = sm.add_camera(cfg.freq)
     # lidar_annotators = sm.add_rtx_lidar()
 
     # Simulation environment
     if cfg.env_name == "obstacle-dense":
-        sim_env.create_obstacle_dense_env()  # obstacles dense
+        from simulation.env.terrain_env import create_obstacle_dense_env
+        create_obstacle_dense_env()  # obstacles dense
     elif cfg.env_name == "obstacle-medium":
-        sim_env.create_obstacle_medium_env()  # obstacles medium
+        from simulation.env.terrain_env import create_obstacle_medium_env
+        create_obstacle_medium_env()  # obstacles medium
     elif cfg.env_name == "obstacle-sparse":
-        sim_env.create_obstacle_sparse_env()  # obstacles sparse
-    elif cfg.env_name == "warehouse":
-        sim_env.create_warehouse_env()  # warehouse
-    elif cfg.env_name == "warehouse-forklifts":
-        sim_env.create_warehouse_forklifts_env()  # warehouse forklifts
-    elif cfg.env_name == "warehouse-shelves":
-        sim_env.create_warehouse_shelves_env()  # warehouse shelves
-    elif cfg.env_name == "full-warehouse":
-        sim_env.create_full_warehouse_env()  # full warehouse
-    elif cfg.env_name == "office":
-        sim_env.create_office_env()  #
-    elif cfg.env_name == "hospital":
-        sim_env.create_hospital_env()  #
+        from simulation.env.terrain_env import create_obstacle_sparse_env
+        create_obstacle_sparse_env()  # obstacles sparse
+    elif cfg.env_name == "omni":
+        from simulation.env.omni_env import create_omni_env
+        create_omni_env(cfg.scene_id)
     elif cfg.env_name == "matterport3d":
-        matterport3d_env.create_matterport3d_env(cfg.episode_idx)  # matterport3d
+        from simulation.env.mp3d_env import create_matterport3d_env
+        create_matterport3d_env(cfg.scene_id)  # matterport3d
+    elif cfg.env_name == "carla":
+        from simulation.env.carla_env import create_carla_env
+        create_carla_env()
 
     # Keyboard control
     system_input = carb.input.acquire_input_interface()
