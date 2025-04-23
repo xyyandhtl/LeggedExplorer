@@ -5,6 +5,7 @@ import torch
 import time
 import math
 import sys
+import numpy as np
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -20,6 +21,7 @@ def run_simulator(cfg):
     # isaacsim extensions can only be import after app start?
     import omni
     import carb
+    # from simulation.ros2_bridge.agent_ros2_bridge import RobotDataManager
     import simulation.agent.agent_sensors as agent_sensors
     import simulation.agent.agent_ctrl as agent_ctrl
     from simulation.scene.common import camera_follow
@@ -83,13 +85,15 @@ def run_simulator(cfg):
 
     # Simulation environment
     if cfg.env_name == "obstacle-dense":
-        from simulation.env.terrain_env import create_obstacle_dense_env
-        create_obstacle_dense_env()  # obstacles dense
+        # from simulation.env.hf_env import create_mixed_terrain_env
+        # create_mixed_terrain_env()  # obstacles dense
+        from simulation.env.mixed_env import create_mixed_terrain_env
+        create_mixed_terrain_env()
     elif cfg.env_name == "obstacle-medium":
-        from simulation.env.terrain_env import create_obstacle_medium_env
+        from simulation.env.hf_env import create_obstacle_medium_env
         create_obstacle_medium_env()  # obstacles medium
     elif cfg.env_name == "obstacle-sparse":
-        from simulation.env.terrain_env import create_obstacle_sparse_env
+        from simulation.env.hf_env import create_obstacle_sparse_env
         create_obstacle_sparse_env()  # obstacles sparse
     elif cfg.env_name == "omni":
         from simulation.env.omni_env import create_omni_env
@@ -120,31 +124,28 @@ def run_simulator(cfg):
     obs_list = ["{:.3f}".format(v) for v in obs_list]
     print(f'[init obs shape]: {obs.shape}: {obs_list}')
 
-    # init world_model data
-    world_model_data_init(obs)
+    if cfg.policy == "wmp_loco":
+        # init world_model data
+        world_model_data_init(obs)
 
     while simulation_app.is_running():
-        # if reset_ctrl.reset_flag: # todo: how to reset?
-        #     obs, _ = env.unwrapped().reset()
-        #     simulation_app.update()
-        #     print(f'env reset done')
-        #     reset_ctrl.reset_flag = False
         start_time = time.time()
         with torch.inference_mode():
-            # locomotion use camera input
-            depth_tensor = torch.zeros((cfg.num_envs, 64, 64), dtype=torch.float32)
-            for i, camera in enumerate(cameras):
-                depth = camera.get_depth()
-                if depth is not None:
-                    depth = np.nan_to_num(depth, nan=0.0, posinf=0.0, neginf=0.0)
-                    depth = depth / 2 - 0.5
-                    depth[(depth <= -0.5) | (depth > 0.5)] = 0.5
-                    depth_tensor[i] = torch.from_numpy(depth.copy())
             actions = policy(obs)
 
             obs, _, _, _ = env.step(actions)
 
-            update_wm(actions, obs, depth_tensor)
+            if cfg.policy == "wmp_loco":
+                # locomotion use camera input
+                depth_tensor = torch.zeros((cfg.num_envs, 64, 64), dtype=torch.float32)
+                for i, camera in enumerate(cameras):
+                    depth = camera.get_depth()
+                    if depth is not None:
+                        depth = np.nan_to_num(depth, nan=0.0, posinf=0.0, neginf=0.0)
+                        depth = depth / 2 - 0.5
+                        depth[(depth <= -0.5) | (depth > 0.5)] = 0.5
+                        depth_tensor[i] = torch.from_numpy(depth.copy())
+                update_wm(actions, obs, depth_tensor)
 
             # # ROS2 data
             # dm.pub_ros2_data()

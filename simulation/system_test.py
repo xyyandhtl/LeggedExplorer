@@ -5,6 +5,7 @@ import torch
 import time
 import math
 import sys
+import numpy as np
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -25,14 +26,14 @@ def run_simulator(cfg):
     import simulation.agent.agent_ctrl as agent_ctrl
     from simulation.scene.common import camera_follow
     from omni.isaac.lab.envs import ManagerBasedRLEnv
-    print(f'use cfg {cfg}')
+    print(f'[use cfg] {cfg}')
 
     if cfg.robot_name == 'go2':
         from simulation.scene.scene_go2 import Go2RSLEnvCfg
         # Go2 Environment setup
         env_cfg = Go2RSLEnvCfg()
         print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_go2}')
-        sm = agent_sensors.SensorManager(cfg.num_envs, 'Go2')
+        # sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
     elif cfg.robot_name == 'a1':
         from simulation.scene.scene_a1 import A1RSLEnvCfg
         # Go2 Environment setup
@@ -53,20 +54,21 @@ def run_simulator(cfg):
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
     env_cfg.scene.num_envs = cfg.num_envs
     env_cfg.decimation = math.ceil(1. / env_cfg.sim.dt / cfg.freq)
-    print(f'sim.dt {env_cfg.sim.dt}')
-    print(f'decimation {env_cfg.decimation}')
+    print(f'[sim.dt]: {env_cfg.sim.dt}')
+    print(f'[decimation]: {env_cfg.decimation}')
     env_cfg.sim.render_interval = env_cfg.decimation
     agent_ctrl.init_base_vel_cmd(cfg.num_envs)
-    print(f'{cfg.robot_name} env_cfg policy: {env_cfg.observations.policy}')
-    print(f'{cfg.robot_name} env_cfg actuator: {env_cfg.actions}')
+    print(f'[{cfg.robot_name} env_cfg policy]: {env_cfg.observations.policy}')
+    print(f'[{cfg.robot_name} env_cfg actuator]: {env_cfg.actions}')
 
     if cfg.policy == "wmp_loco":
-        # from locomotion.env_cfg.wmp_env import WMPObsEnvWrapper
-        # env = ManagerBasedRLEnv(env_cfg)
-        # env = WMPObsEnvWrapper(env)
-        # from locomotion.policy.wmp_loco import load_policy_wmp
-        # policy = load_policy_wmp(robot_name=cfg.robot_name, device=cfg.policy_device)
-        raise NotImplementedError
+        from locomotion.env_cfg.wmp_env import WMPObsEnvWrapper
+        env = ManagerBasedRLEnv(env_cfg)
+        env = WMPObsEnvWrapper(env)
+        from locomotion.policy.wmp_loco import load_policy_wmp, world_model_data_init, update_wm
+        policy = load_policy_wmp(robot_name=cfg.robot_name, device=cfg.policy_device)
+        cameras = sm.add_camera_wmp(cfg.freq)
+        # raise NotImplementedError
     elif cfg.policy == "him_loco":
         from locomotion.env_cfg.him_env import HIMLocoEnvWrapper
         env = ManagerBasedRLEnv(env_cfg)
@@ -83,13 +85,15 @@ def run_simulator(cfg):
 
     # Simulation environment
     if cfg.env_name == "obstacle-dense":
-        from simulation.env.terrain_env import create_obstacle_dense_env
-        create_obstacle_dense_env()  # obstacles dense
+        # from simulation.env.hf_env import create_mixed_terrain_env
+        # create_mixed_terrain_env()  # obstacles dense
+        from simulation.env.mixed_env import create_mixed_terrain_env
+        create_mixed_terrain_env()
     elif cfg.env_name == "obstacle-medium":
-        from simulation.env.terrain_env import create_obstacle_medium_env
+        from simulation.env.hf_env import create_obstacle_medium_env
         create_obstacle_medium_env()  # obstacles medium
     elif cfg.env_name == "obstacle-sparse":
-        from simulation.env.terrain_env import create_obstacle_sparse_env
+        from simulation.env.hf_env import create_obstacle_sparse_env
         create_obstacle_sparse_env()  # obstacles sparse
     elif cfg.env_name == "omni":
         from simulation.env.omni_env import create_omni_env
@@ -117,30 +121,33 @@ def run_simulator(cfg):
     sim_step_dt = float(env_cfg.sim.dt * env_cfg.decimation)
     obs, _ = env.reset()
     obs_list = obs.cpu().numpy().tolist()[0]
-    obs_list = ["{:.2f}".format(v) for v in obs_list]
-    print(f'init obs shape {obs.shape}: {obs_list}')
+    obs_list = ["{:.3f}".format(v) for v in obs_list]
+    print(f'[init obs shape]: {obs.shape}: {obs_list}')
+
+    if cfg.policy == "wmp_loco":
+        # init world_model data
+        world_model_data_init(obs)
 
     while simulation_app.is_running():
-        # if reset_ctrl.reset_flag: # todo: how to reset?
-        #     obs, _ = env.unwrapped().reset()
-        #     simulation_app.update()
-        #     print(f'env reset done')
-        #     reset_ctrl.reset_flag = False
         start_time = time.time()
         with torch.inference_mode():
-            # locomotion use camera input
-            # depth_tensor = torch.zeros((cfg.num_envs, 64, 64), dtype=torch.float32)
-            # for i, camera in enumerate(cameras):
-            #     depth = camera.get_depth()
-            #     if depth is not None:
-            #         depth = np.nan_to_num(depth, nan=0.0, posinf=0.0, neginf=0.0)
-            #         depth = depth / 2 - 0.5
-            #         depth[(depth <= -0.5) | (depth > 0.5)] = 0.5
-            #         depth_tensor[i] = torch.from_numpy(depth.copy())
             actions = policy(obs)
+
             obs, _, _, _ = env.step(actions)
 
-            # ROS2 data
+            if cfg.policy == "wmp_loco":
+                # locomotion use camera input
+                depth_tensor = torch.zeros((cfg.num_envs, 64, 64), dtype=torch.float32)
+                for i, camera in enumerate(cameras):
+                    depth = camera.get_depth()
+                    if depth is not None:
+                        depth = np.nan_to_num(depth, nan=0.0, posinf=0.0, neginf=0.0)
+                        depth = depth / 2 - 0.5
+                        depth[(depth <= -0.5) | (depth > 0.5)] = 0.5
+                        depth_tensor[i] = torch.from_numpy(depth.copy())
+                update_wm(actions, obs, depth_tensor)
+
+            # # ROS2 data
             dm.pub_ros2_data()
             rclpy.spin_once(dm)
 

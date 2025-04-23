@@ -1,7 +1,17 @@
 from omni.isaac.lab.terrains import TerrainImporterCfg, TerrainImporter
 from omni.isaac.lab.terrains import TerrainGeneratorCfg
+from omni.isaac.lab.terrains.height_field import (
+    HfPyramidSlopedTerrainCfg,
+    HfDiscreteObstaclesTerrainCfg,
+    HfInvertedPyramidSlopedTerrainCfg,
+    HfWaveTerrainCfg,
+    HfPyramidStairsTerrainCfg,
+    HfInvertedPyramidStairsTerrainCfg,
+    HfRandomUniformTerrainCfg,
+    HfSteppingStonesTerrainCfg,
+)
 
-from .terrain_cfg import HfUniformDiscreteObstaclesTerrainCfg
+from .hf_terrain import HfUniformDiscreteObstaclesTerrainCfg
 from .common import add_semantic_label
 
 
@@ -80,5 +90,5 @@ def create_obstacle_dense_env():
         ),
         visual_material=None,
     )
-    TerrainImporter(terrain) 
+    TerrainImporter(terrain)
 
