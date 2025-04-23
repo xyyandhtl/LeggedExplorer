@@ -40,6 +40,14 @@ def run_simulator(cfg):
         env_cfg.scene.unitree_a1.init_state.rot = tuple(cfg.init_rot)
         print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_a1}')
         # sm = agent_sensors.SensorManagerA1(cfg.num_envs)
+    elif cfg.robot_name == 'aliengo':
+        from simulation.scene.scene_aliengo import AliengoRSLEnvCfg
+        # Go2 Environment setup
+        env_cfg = AliengoRSLEnvCfg()
+        env_cfg.scene.unitree_aliengo.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.unitree_aliengo.init_state.rot = tuple(cfg.init_rot)
+        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_aliengo}')
+        sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
     env_cfg.scene.num_envs = cfg.num_envs

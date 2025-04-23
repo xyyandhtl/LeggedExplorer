@@ -19,3 +19,13 @@
 **VLN/VLA_explorer:** NaVILA, TagMap/VLMaps(pre-built-map&habitat-sim), InstructNav(habitat-sim), ... 
 
 **SLAM+Navigation Baseline:**
+
+## Simulation Test
+**locomotion weights copy:** check locomotion/ckpts folder
+
+**usd resources copy and env variable set:** check customed usd folder and
+```shell
+export USER_PATH_TO_USD=/home/lenovo/Documents/usd
+```
+
+**settings:** simulation/sim.yaml
