@@ -25,6 +25,7 @@ from omni.isaac.ros2_bridge import read_camera_info
 robot_prim_dict = {
     'go2' : 'Go2',
     'a1' : 'A1',
+    'aliengo': "Aliengo",
 }
 
 class RobotDataManager(Node):
