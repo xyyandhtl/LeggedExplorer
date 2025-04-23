@@ -5,12 +5,8 @@ from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import RslRlVecEnvWrapper
 class WMPObsEnvWrapper(RslRlVecEnvWrapper):
     def __init__(self, env):
         super().__init__(env)
-        self.wmp_obs_dim = 285
-        self.wmp_obs_dim_deploy = 45
-        self.non_privilege_start = 53
-        self.non_privilege_end = self.non_privilege_start + self.wmp_obs_dim_deploy
+        self.base_idx = 9
 
-        self.base_idx = self.non_privilege_start + 9
         # 用于对特定观测段做通道置换
         self.reverse_index_list = [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]
         # 输出动作的维度反向映射（用于推理部署）
@@ -29,17 +25,12 @@ class WMPObsEnvWrapper(RslRlVecEnvWrapper):
         return new_obs, reward, done, info
 
     def _construct_padded_obs(self, orig_obs):
-        num_envs = orig_obs.shape[0]
-        new_obs = torch.zeros((num_envs, self.wmp_obs_dim), dtype=orig_obs.dtype, device=orig_obs.device)
-        # 填入原始观测的非特权部分
-        new_obs[:, self.non_privilege_start:self.non_privilege_end] = orig_obs
+        # num_envs = orig_obs.shape[0]
+        # new_obs = torch.zeros((num_envs, self.wmp_obs_dim_deploy), dtype=orig_obs.dtype, device=orig_obs.device)
+        new_obs = orig_obs
         # 做 reverse_index 置换的部分：joint_pos, joint_vel, last_action 各12维
         # wmp cmd_vel is 6:9, while default is 0:3
-        # wmp cmd_vel is 6:9, while default is 0:3
-        (new_obs[:, self.non_privilege_start: self.non_privilege_start + 6],
-         new_obs[:, self.non_privilege_start + 6: self.non_privilege_start + 9]) = \
-            (new_obs[:, self.non_privilege_start + 3: self.non_privilege_start + 9].clone(),
-             new_obs[:, self.non_privilege_start: self.non_privilege_start + 3].clone())
+        (new_obs[:, :6], new_obs[:, 6:9]) = (new_obs[:, 3:9].clone(), new_obs[:, :3].clone())
         return self._permute_obs(new_obs)
 
     def _permute_obs(self, obs):
