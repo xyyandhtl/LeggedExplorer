@@ -1,0 +1,5 @@
+yolo_detector_node:
+  ros__parameters:
+    color_image_topic: /legged/front_cam/color_image
+    time_step: 0.033
+    debug_vis: False

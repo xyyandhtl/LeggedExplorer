@@ -234,12 +234,12 @@ def update_wm(actions, obs, depth, reset_env_ids=[]):
 
         # encoder
         wm_embed = world_model_encoder_forward(wmp_data.wm_obs)
-        print(f"[update_wm | wm_embed shape] : {wm_embed.shape}")
+        # print(f"[update_wm | wm_embed shape] : {wm_embed.shape}")
         # obs_step
         wmp_data.wm_latent, _ = world_model_rssm_forward(wmp_data.wm_latent, wmp_data.wm_action, wm_embed, wmp_data.wm_obs["is_first"],
                                                  sample=True)
         wmp_data.wm_feature = wmp_data.wm_latent["deter"]
-        print(f"[update_wm | wm_feature shape] : {wmp_data.wm_feature.shape}")
+        # print(f"[update_wm | wm_feature shape] : {wmp_data.wm_feature.shape}")
         wmp_data.wm_is_first[:] = 0
 
     # 更新世界模型的输入

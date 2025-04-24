@@ -35,13 +35,13 @@ def create_mixed_terrain_env():
                 "gaps": MeshGapTerrainCfg(proportion=0.2, gap_width_range=(0.3, 1.0), platform_width=1.0),
                 # "pit": MeshPitTerrainCfg(proportion=0.2, pit_depth_range=(0.2, 0.5)),
                 "boxes": MeshRepeatedBoxesTerrainCfg(proportion=0.2, object_params_start=MeshRepeatedBoxesTerrainCfg.ObjectCfg(
-                    num_objects=30, height=1.0, size=(0.3, 0.3), max_yx_angle=0.0, degrees=True
+                    num_objects=30, height=1.5, size=(0.3, 0.3), max_yx_angle=0.0, degrees=True
                 ), object_params_end=MeshRepeatedBoxesTerrainCfg.ObjectCfg(
                     num_objects=50, height=1.0, size=(0.3, 0.3), max_yx_angle=0.0, degrees=True
                 ), platform_width=0.),
-                "ring": MeshFloatingRingTerrainCfg(proportion=0.2, ring_width_range=(0.8, 1.0),
-                                                   ring_height_range=(0.3, 0.6), ring_thickness=0.5,
-                                                   platform_width=0.0),
+                # "ring": MeshFloatingRingTerrainCfg(proportion=0.2, ring_width_range=(0.8, 1.0),
+                #                                    ring_height_range=(0.3, 0.6), ring_thickness=0.5,
+                #                                    platform_width=0.0),
                 "rough": HfRandomUniformTerrainCfg(
                     proportion=0.2, noise_range=(0.02, 0.1), noise_step=0.02
                 ),
