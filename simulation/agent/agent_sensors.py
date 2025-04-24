@@ -39,7 +39,7 @@ class SensorManager:
         for env_idx in range(self.num_envs):
             camera = Camera(
                 prim_path=f"/World/envs/env_{env_idx}/{self.robot_name}/{self.base_name}/front_cam",
-                translation=np.array([0.27, 0.0, 0.2]),
+                translation=np.array([0.4, 0.0, 0.2]),
                 frequency=freq,
                 resolution=(640, 480),
                 orientation=rot_utils.euler_angles_to_quats(np.array([0, 0, 0]), degrees=True),

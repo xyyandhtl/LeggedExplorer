@@ -67,7 +67,7 @@ def run_simulator(cfg):
         env = WMPObsEnvWrapper(env)
         from locomotion.policy.wmp_loco import load_policy_wmp, world_model_data_init, update_wm
         policy = load_policy_wmp(robot_name=cfg.robot_name, device=cfg.policy_device)
-        cameras = sm.add_camera_wmp(cfg.freq)
+        depths = sm.add_camera_wmp(cfg.freq)
         # raise NotImplementedError
     elif cfg.policy == "him_loco":
         from locomotion.env_cfg.him_env import HIMLocoEnvWrapper
@@ -138,7 +138,7 @@ def run_simulator(cfg):
             if cfg.policy == "wmp_loco":
                 # locomotion use camera input
                 depth_tensor = torch.zeros((cfg.num_envs, 64, 64), dtype=torch.float32)
-                for i, camera in enumerate(cameras):
+                for i, camera in enumerate(depths):
                     depth = camera.get_depth()
                     if depth is not None:
                         depth = np.nan_to_num(depth, nan=0.0, posinf=0.0, neginf=0.0)

@@ -1,7 +1,7 @@
 defaults:
   - _self_
 
-robot_name: aliengo   # a1 go2 aliengo
+robot_name: a1   # a1 go2 aliengo
 num_envs: 1
 freq: 50 # can only be divisible by 200
 camera_follow: True
