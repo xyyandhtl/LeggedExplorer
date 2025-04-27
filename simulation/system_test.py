@@ -32,23 +32,23 @@ def run_simulator(cfg):
         from simulation.scene.scene_go2 import Go2RSLEnvCfg
         # Go2 Environment setup
         env_cfg = Go2RSLEnvCfg()
-        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_go2}')
+        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
         # sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
     elif cfg.robot_name == 'a1':
         from simulation.scene.scene_a1 import A1RSLEnvCfg
         # Go2 Environment setup
         env_cfg = A1RSLEnvCfg()
-        env_cfg.scene.unitree_a1.init_state.pos = tuple(cfg.init_pos)
-        env_cfg.scene.unitree_a1.init_state.rot = tuple(cfg.init_rot)
-        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_a1}')
+        env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
         sm = agent_sensors.SensorManager(cfg.num_envs, 'A1')
     elif cfg.robot_name == 'aliengo':
         from simulation.scene.scene_aliengo import AliengoRSLEnvCfg
         # Go2 Environment setup
         env_cfg = AliengoRSLEnvCfg()
-        env_cfg.scene.unitree_aliengo.init_state.pos = tuple(cfg.init_pos)
-        env_cfg.scene.unitree_aliengo.init_state.rot = tuple(cfg.init_rot)
-        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.unitree_aliengo}')
+        env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
         sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
@@ -75,6 +75,17 @@ def run_simulator(cfg):
         env = HIMLocoEnvWrapper(env)
         from locomotion.policy.him_loco import load_policy_him
         policy = load_policy_him(robot_name=cfg.robot_name, device=cfg.policy_device)
+    elif cfg.policy == "wtw_loco":
+        from locomotion.env_cfg.wtw_env import WTWLocoEnvWrapper
+        env_cfg.scene.legged_robot.init_state.joint_pos['.*L_hip_joint'] = 0.0
+        env_cfg.scene.legged_robot.init_state.joint_pos['.*R_hip_joint'] = 0.0
+        env_cfg.scene.legged_robot.init_state.joint_pos['R[L,R]_thigh_joint'] = 0.8
+        env_cfg.observations.policy.base_lin_vel.scale = 2.0
+        env_cfg.actions.joint_pos.scale = 0.5
+        env = ManagerBasedRLEnv(env_cfg)
+        env = WTWLocoEnvWrapper(env)
+        from locomotion.policy.wtw_loco import load_policy_wtw
+        policy = load_policy_wtw(robot_name=cfg.robot_name, device=cfg.policy_device)
     else:
         raise NotImplementedError(f'Policy {cfg.policy} not implemented')
 
@@ -87,8 +98,8 @@ def run_simulator(cfg):
     if cfg.env_name == "obstacle-dense":
         # from simulation.env.hf_env import create_mixed_terrain_env
         # create_mixed_terrain_env()  # obstacles dense
-        from simulation.env.mixed_env import create_mixed_terrain_env
-        create_mixed_terrain_env()
+        from simulation.env.mixed_env import create_mixed_terrain_env, create_mixed_terrain_env2
+        create_mixed_terrain_env2()
     elif cfg.env_name == "obstacle-medium":
         from simulation.env.hf_env import create_obstacle_medium_env
         create_obstacle_medium_env()  # obstacles medium
@@ -153,7 +164,7 @@ def run_simulator(cfg):
 
             # Camera follow
             if (cfg.camera_follow):
-                camera_follow(env, f'unitree_{cfg.robot_name}')
+                camera_follow(env, 'legged_robot')
 
             # limit loop time
             elapsed_time = time.time() - start_time

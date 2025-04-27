@@ -3,6 +3,15 @@ import carb
 from omni.isaac.lab.envs import ManagerBasedEnv
 
 base_vel_cmd_input = None
+lx_base_height = 0.0
+lx_base_stance_length = 0.4
+lx_base_stance_width = 0.33
+ry_freq_base = 2.0
+ry_footswing_base = 0.08
+ry_ori_pitch_base = 0.0
+ry_ori_roll_base = 0.0
+gait_type = 'A'
+
 
 # Initialize base_vel_cmd_input as a tensor when created
 def init_base_vel_cmd(num_envs):
@@ -15,9 +24,49 @@ def base_vel_cmd(env: ManagerBasedEnv) -> torch.Tensor:
     global base_vel_cmd_input
     return base_vel_cmd_input.clone().to(env.device)
 
+def cmd_base_height():
+    global lx_base_height
+    return lx_base_height
+
+def cmd_stance_length():
+    global lx_base_stance_length
+    return lx_base_stance_length
+
+def cmd_stance_width():
+    global lx_base_stance_width
+    return lx_base_stance_width
+
+def cmd_freq():
+    global ry_freq_base
+    return ry_freq_base
+
+def cmd_footswing():
+    global ry_footswing_base
+    return ry_footswing_base
+
+def cmd_pitch():
+    global ry_ori_pitch_base
+    return ry_ori_pitch_base
+
+def cmd_roll():
+    global ry_ori_roll_base
+    return ry_ori_roll_base
+
+def cmd_gait_type():
+    global gait_type
+    return gait_type
+
 # Update sub_keyboard_event to modify specific rows of the tensor based on key inputs
 def sub_keyboard_event(event) -> bool:
     global base_vel_cmd_input
+    global lx_base_height
+    global lx_base_stance_length
+    global lx_base_stance_width
+    global ry_freq_base
+    global ry_footswing_base
+    global ry_ori_pitch_base
+    global ry_ori_roll_base
+    global gait_type
     lin_vel = 1.2
     ang_vel = 0.5
     
@@ -32,10 +81,47 @@ def sub_keyboard_event(event) -> bool:
                 base_vel_cmd_input[0] = torch.tensor([0, lin_vel, 0], dtype=torch.float32)
             elif event.input.name == 'D':
                 base_vel_cmd_input[0] = torch.tensor([0, -lin_vel, 0], dtype=torch.float32)
-            elif event.input.name == 'Z':
+            elif event.input.name == 'Q':
                 base_vel_cmd_input[0] = torch.tensor([0, 0, ang_vel], dtype=torch.float32)
-            elif event.input.name == 'C':
+            elif event.input.name == 'E':
                 base_vel_cmd_input[0] = torch.tensor([0, 0, -ang_vel], dtype=torch.float32)
+
+            elif event.input.name == 'UP':
+                lx_base_height += 0.01
+            elif event.input.name == 'DOWN':
+                lx_base_height -= 0.01
+            elif event.input.name == 'LEFT':
+                lx_base_stance_width -= 0.01
+            elif event.input.name == 'RIGHT':
+                lx_base_stance_width += 0.01
+            elif event.input.name == 'NUMPAD_ADD':
+                ry_freq_base += 0.1
+            elif event.input.name == 'NUMPAD_SUBTRACT':
+                ry_freq_base -= 0.01
+            elif event.input.name == 'NUMPAD_7':
+                lx_base_stance_length += 0.01
+            elif event.input.name == 'NUMPAD_4':
+                lx_base_stance_length -= 0.01
+            elif event.input.name == 'NUMPAD_8':
+                ry_footswing_base += 0.03
+            elif event.input.name == 'NUMPAD_5':
+                ry_footswing_base -= 0.03
+            elif event.input.name == 'NUMPAD_9':
+                ry_ori_pitch_base += 0.01
+            elif event.input.name == 'NUMPAD_6':
+                ry_ori_pitch_base -= 0.01
+            elif event.input.name == 'NUMPAD_*':
+                ry_ori_roll_base += 0.01
+            elif event.input.name == 'NUMPAD_/':
+                ry_ori_roll_base -= 0.01
+            elif event.input.name == 'NUMPAD_0':
+                gait_type = 'A'
+            elif event.input.name == 'NUMPAD_1':
+                gait_type = 'B'
+            elif event.input.name == 'NUMPAD_2':
+                gait_type = 'X'
+            elif event.input.name == 'NUMPAD_3':
+                gait_type = 'Y'
             
             # If there are multiple environments, handle inputs for env 1
             if base_vel_cmd_input.shape[0] > 1:

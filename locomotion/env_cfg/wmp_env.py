@@ -1,4 +1,3 @@
-import torch
 from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import RslRlVecEnvWrapper
 
 

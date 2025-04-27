@@ -41,7 +41,7 @@ class A1SimCfg(InteractiveSceneCfg):
     cylinder_light.init_state.pos = (0, 0, 2.0)
 
     # A1 Robot
-    unitree_a1: ArticulationCfg = UNITREE_A1_CFG.replace(
+    legged_robot: ArticulationCfg = UNITREE_A1_CFG.replace(
         prim_path="{ENV_REGEX_NS}/A1",
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(0, 0, 0.45),  # init height 0.4
@@ -55,9 +55,9 @@ class A1SimCfg(InteractiveSceneCfg):
             joint_vel={".*": 0.0},
         ),
     )
-    unitree_a1.actuators["base_legs"].stiffness = 40.0
-    unitree_a1.actuators["base_legs"].damping = 1.0
-    print('joint_names_expr:', unitree_a1.actuators["base_legs"].joint_names_expr)
+    legged_robot.actuators["base_legs"].stiffness = 40.0
+    legged_robot.actuators["base_legs"].damping = 1.0
+    print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
 
     # A1 foot contact sensor
     contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/A1/.*_foot", history_length=3, track_air_time=True)
@@ -65,7 +65,7 @@ class A1SimCfg(InteractiveSceneCfg):
 @configclass
 class ActionsCfg:
     """Action specifications for the environment."""
-    joint_pos = mdp.JointPositionActionCfg(asset_name="unitree_a1",
+    joint_pos = mdp.JointPositionActionCfg(asset_name="legged_robot",
                                            joint_names=[".*"],  # todo: define joint_name seems useless, why?
                                            scale=0.25)
 
@@ -79,21 +79,21 @@ class ObservationsCfg:
 
         # observation terms (order preserved)
         # base_lin_vel = ObsTerm(func=mdp.base_lin_vel,
-        #                        params={"asset_cfg": SceneEntityCfg(name="unitree_a1")})
+        #                        params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
 
         # Note: himloco policy velocity command is ahead, wmp policy velocity command is behind
         base_vel_cmd = ObsTerm(func=base_vel_cmd)
 
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25,
-                               params={"asset_cfg": SceneEntityCfg(name="unitree_a1")})
+                               params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
         projected_gravity = ObsTerm(func=mdp.projected_gravity,
-                                    params={"asset_cfg": SceneEntityCfg(name="unitree_a1")},
+                                    params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
                                     noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05))
 
         joint_pos = ObsTerm(func=mdp.joint_pos_rel,
-                            params={"asset_cfg": SceneEntityCfg(name="unitree_a1",)})
+                            params={"asset_cfg": SceneEntityCfg(name="legged_robot",)})
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, scale=0.05,
-                            params={"asset_cfg": SceneEntityCfg(name="unitree_a1",)})
+                            params={"asset_cfg": SceneEntityCfg(name="legged_robot",)})
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self) -> None:
@@ -107,7 +107,7 @@ class ObservationsCfg:
 class CommandsCfg:
     """Command specifications for the MDP."""
     base_vel_cmd = mdp.UniformVelocityCommandCfg(
-        asset_name="unitree_a1",
+        asset_name="legged_robot",
         resampling_time_range=(0.0, 0.0),
         debug_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
