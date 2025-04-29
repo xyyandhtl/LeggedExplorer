@@ -34,8 +34,12 @@ class RobotDataManager(Node):
         self.cfg = cfg
         self.robot_name = self.cfg.robot_name
         self.prim_name = robot_prim_dict[self.robot_name]
-        self.scene_root = f"unitree_{self.robot_name}"
+        self.scene_root = f"legged_robot"
         self.robot_node_name = 'legged' # use unified name for different robot
+
+        self.diagonal_to_yaw = cfg.diagonal_to_yaw
+        self.walk_while_yaw = cfg.walk_while_yaw
+
         self.create_ros_time_graph()
         sim_time_set = False
         while (rclpy.ok() and sim_time_set==False):
@@ -203,12 +207,12 @@ class RobotDataManager(Node):
     
     def create_camera_publisher(self):
         # self.pub_image_graph()
-        if (self.cfg.sensor.enable_camera):
-            if (self.cfg.sensor.color_image):
+        if self.cfg.enable_camera:
+            if self.cfg.ros2_sensor.color_image:
                 self.pub_color_image()
-            if (self.cfg.sensor.depth_image):
+            if self.cfg.ros2_sensor.depth_image:
                 self.pub_depth_image()
-            if (self.cfg.sensor.semantic_segmentation):
+            if self.cfg.ros2_sensor.semantic_segmentation:
                 self.pub_semantic_image()
             # self.pub_cam_depth_cloud()
             self.publish_camera_info()
@@ -318,7 +322,7 @@ class RobotDataManager(Node):
                                 i)
                 self.publish_pose(robot_data.root_state_w[i, :3],
                                 robot_data.root_state_w[i, 3:7], i)
-        if (self.cfg.sensor.enable_lidar):
+        if (self.cfg.enable_lidar):
             if (pub_lidar):
                 self.lidar_pub_time = time.time()
                 for i in range(self.num_envs):
@@ -328,6 +332,18 @@ class RobotDataManager(Node):
         agent_ctrl.base_vel_cmd_input[env_idx][0] = msg.linear.x
         agent_ctrl.base_vel_cmd_input[env_idx][1] = msg.linear.y
         agent_ctrl.base_vel_cmd_input[env_idx][2] = msg.angular.z
+        print(f'cmd msg {msg.linear} and {msg.angular}')
+        if self.diagonal_to_yaw:
+            if msg.linear.y != 0:
+                cmd_ang = -np.arctan2(msg.linear.y, msg.linear.x) * 0.3     # scale 0.5 to avoid too fast turning
+                print(f'cmd msg {msg.linear} and {msg.angular}, cmd_ang {cmd_ang}')
+                if cmd_ang * msg.angular.z < 0:
+                    print(f'warning: cmd_vel seemed not reasonable!')
+                agent_ctrl.base_vel_cmd_input[env_idx][2] += cmd_ang
+                agent_ctrl.base_vel_cmd_input[env_idx][1] = 0
+        if not self.walk_while_yaw:
+            if agent_ctrl.base_vel_cmd_input[env_idx][2] > 0.2:
+                agent_ctrl.base_vel_cmd_input[env_idx][0] = 0
     
     def semantic_segmentation_callback(self, img, env_idx):
         bridge = CvBridge()

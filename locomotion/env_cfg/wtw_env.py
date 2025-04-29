@@ -13,6 +13,7 @@ class WTWLocoEnvWrapper(RslRlVecEnvWrapper):
         self.obs_history = None
 
         self.base_idx = 9
+        self.command_start = 6
         # 用于对特定观测段做通道置换
         self.reverse_index_list = [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]
         # 输出动作的维度反向映射（用于推理部署）
@@ -34,7 +35,7 @@ class WTWLocoEnvWrapper(RslRlVecEnvWrapper):
         self.last_action = torch.zeros((obs.shape[0], 12), device=obs.device)
         obs = self._permute_obs(obs)
         # 初始化历史观测，维度：[num_envs, history_len, obs_dim]
-        self.obs_history = torch.stack([obs] * self.history_len, dim=1)
+        self.obs_history = torch.cat([obs] * self.history_len, dim=-1)
         return self._get_stacked_obs(), info
 
     def step(self, action):
@@ -45,8 +46,8 @@ class WTWLocoEnvWrapper(RslRlVecEnvWrapper):
         obs, reward, done, info = super().step(action)
         obs = self._permute_obs(obs)
         # 更新历史观测
-        self.obs_history = torch.cat([self.obs_history[:, 1:], obs.unsqueeze(1)], dim=1)
-        return self._get_stacked_obs(), reward, done, info
+        self.obs_history = torch.cat([self.obs_history[:, -obs.shape[1]:], obs.unsqueeze(1)], dim=1)
+        return self.obs_history, reward, done, info
 
     def _get_stacked_obs(self):
         # 展平维度：[num_envs, history_len * obs_dim]

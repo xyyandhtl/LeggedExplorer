@@ -4,7 +4,10 @@ from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import RslRlVecEnvWrapper
 class WMPObsEnvWrapper(RslRlVecEnvWrapper):
     def __init__(self, env):
         super().__init__(env)
+        # self.obs_dim = 45
         self.base_idx = 9
+        self.command_start = 6
+        self.obs_history = None
 
         # 用于对特定观测段做通道置换
         self.reverse_index_list = [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]

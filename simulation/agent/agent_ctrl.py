@@ -67,7 +67,7 @@ def sub_keyboard_event(event) -> bool:
     global ry_ori_pitch_base
     global ry_ori_roll_base
     global gait_type
-    lin_vel = 1.2
+    lin_vel = 2.0
     ang_vel = 0.5
     
     if base_vel_cmd_input is not None:

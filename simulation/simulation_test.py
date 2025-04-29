@@ -1,6 +1,6 @@
 from isaacsim import SimulationApp
 import hydra
-# import rclpy
+import rclpy
 import torch
 import time
 import math
@@ -21,13 +21,15 @@ def run_simulator(cfg):
     # isaacsim extensions can only be import after app start?
     import omni
     import carb
-    # from simulation.ros2_bridge.agent_ros2_bridge import RobotDataManager
+    from simulation.ros2_bridge.agent_ros2_bridge import RobotDataManager
     import simulation.agent.agent_sensors as agent_sensors
     import simulation.agent.agent_ctrl as agent_ctrl
     from simulation.scene.common import camera_follow
     from omni.isaac.lab.envs import ManagerBasedRLEnv
     print(f'[use cfg] {cfg}')
 
+    # ===============================================================================================
+    # robot env setup
     if cfg.robot_name == 'go2':
         from simulation.scene.scene_go2 import Go2RSLEnvCfg
         # Go2 Environment setup
@@ -52,54 +54,79 @@ def run_simulator(cfg):
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
     print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
     env_cfg.scene.num_envs = cfg.num_envs
-    env_cfg.decimation = math.ceil(1. / env_cfg.sim.dt / cfg.freq)
+    env_cfg.decimation = math.ceil(1. / env_cfg.sim.dt / cfg.camera_freq)
     print(f'[sim.dt]: {env_cfg.sim.dt}')
     print(f'[decimation]: {env_cfg.decimation}')
     env_cfg.sim.render_interval = env_cfg.decimation
     agent_ctrl.init_base_vel_cmd(cfg.num_envs)
     print(f'[{cfg.robot_name} env_cfg policy]: {env_cfg.observations.policy}')
     print(f'[{cfg.robot_name} env_cfg actuator]: {env_cfg.actions}')
+    env = ManagerBasedRLEnv(env_cfg)
 
+    # ===============================================================================================
+    # locomotion policy setup
     if cfg.policy == "wmp_loco":
         from locomotion.env_cfg.wmp_env import WMPObsEnvWrapper
-        env = ManagerBasedRLEnv(env_cfg)
         env = WMPObsEnvWrapper(env)
         from locomotion.policy.wmp_loco import load_policy_wmp, world_model_data_init, update_wm
         policy = load_policy_wmp(robot_name=cfg.robot_name, device=cfg.policy_device)
-        depths = sm.add_camera_wmp(cfg.freq)
+        depths = sm.add_camera_wmp(cfg.camera_freq)
         # raise NotImplementedError
     elif cfg.policy == "him_loco":
         from locomotion.env_cfg.him_env import HIMLocoEnvWrapper
-        env = ManagerBasedRLEnv(env_cfg)
         env = HIMLocoEnvWrapper(env)
         from locomotion.policy.him_loco import load_policy_him
         policy = load_policy_him(robot_name=cfg.robot_name, device=cfg.policy_device)
     elif cfg.policy == "wtw_loco":
         from locomotion.env_cfg.wtw_env import WTWLocoEnvWrapper
-        env_cfg.scene.legged_robot.init_state.joint_pos['.*L_hip_joint'] = 0.0
-        env_cfg.scene.legged_robot.init_state.joint_pos['.*R_hip_joint'] = 0.0
-        env_cfg.scene.legged_robot.init_state.joint_pos['R[L,R]_thigh_joint'] = 0.8
+        # env_cfg.scene.legged_robot.init_state.joint_pos['.*L_hip_joint'] = 0.0
+        # env_cfg.scene.legged_robot.init_state.joint_pos['.*R_hip_joint'] = 0.0
+        # env_cfg.scene.legged_robot.init_state.joint_pos['R[L,R]_thigh_joint'] = 0.8
         # env_cfg.observations.policy.base_lin_vel.scale = 2.0
-        env_cfg.actions.joint_pos.scale = 0.25
-        env = ManagerBasedRLEnv(env_cfg)
-
+        # env_cfg.actions.joint_pos.scale = 0.25
         env = WTWLocoEnvWrapper(env)
         from locomotion.policy.wtw_loco import load_policy_wtw
         policy = load_policy_wtw(robot_name=cfg.robot_name, device=cfg.policy_device)
     else:
         raise NotImplementedError(f'Policy {cfg.policy} not implemented')
 
+    # ===============================================================================================
     # Sensor setup
     agent_sensors.create_view_camera(cfg.view_pos, cfg.view_rot)
-    # cameras = sm.add_camera(cfg.freq)
-    # lidar_annotators = sm.add_rtx_lidar()
+    cameras, lidar_annotators = None, None
+    if cfg.enable_camera:
+        cameras = sm.add_camera(cfg)
+    if cfg.enable_lidar:
+        lidar_annotators = sm.add_rtx_lidar()
 
+    # ===============================================================================================
+    # local planner setup
+    local_planner = None
+    if cfg.test_level > 0:
+        if cfg.local_planner == 'depth_planner':
+            from local_planner.policy.depth_policy import LocalPlannerDepth
+            local_planner = LocalPlannerDepth(cfg)
+            assert cameras is not None, 'Camera not enabled'
+            local_planner.set_depth_cameras(cameras)
+        else:
+            raise NotImplementedError(f'Local planner {cfg.local_planner} not implemented')
+
+        from local_planner.env_wrapper.planner_env_wrapper import LocalPlannerEnvWrapper
+        env = LocalPlannerEnvWrapper(env)
+        env.set_local_planner(local_planner)
+
+    # ===============================================================================================
     # Simulation environment
-    if cfg.env_name == "obstacle-dense":
+    if cfg.env_name == "tunnel":
         # from simulation.env.hf_env import create_mixed_terrain_env
         # create_mixed_terrain_env()  # obstacles dense
-        from simulation.env.mixed_env import create_mixed_terrain_env
-        create_mixed_terrain_env()
+        from simulation.env.hf_env import create_tunnel_env
+        create_tunnel_env()
+    elif cfg.env_name == "obstacle-dense":
+        # from simulation.env.hf_env import create_mixed_terrain_env
+        # create_mixed_terrain_env()  # obstacles dense
+        from simulation.env.mixed_env import create_mixed_terrain_env, create_mixed_terrain_env2
+        create_mixed_terrain_env2()
     elif cfg.env_name == "obstacle-medium":
         from simulation.env.hf_env import create_obstacle_medium_env
         create_obstacle_medium_env()  # obstacles medium
@@ -116,6 +143,7 @@ def run_simulator(cfg):
         from simulation.env.carla_env import create_carla_env
         create_carla_env()
 
+    # ===============================================================================================
     # Keyboard control
     system_input = carb.input.acquire_input_interface()
     keyboard = omni.appwindow.get_default_app_window().get_keyboard()
@@ -124,11 +152,14 @@ def run_simulator(cfg):
     reset_ctrl = agent_ctrl.AgentResetControl()
     system_input.subscribe_to_keyboard_events(keyboard, reset_ctrl.sub_keyboard_event)
 
+    # ===============================================================================================
     # ROS2 Bridge
-    # rclpy.init()
-    # dm = RobotDataManager(env, lidar_annotators, cameras, cfg)
+    if cfg.data_access_method == "ros2":
+        rclpy.init()
+        dm = RobotDataManager(env, lidar_annotators, cameras, cfg)
 
-    # Run simulation
+    # ===============================================================================================
+    # simulation loop
     sim_step_dt = float(env_cfg.sim.dt * env_cfg.decimation)
     obs, _ = env.reset()
     obs_list = obs.cpu().numpy().tolist()[0]
@@ -138,7 +169,10 @@ def run_simulator(cfg):
     if cfg.policy == "wmp_loco":
         # init world_model data
         world_model_data_init(obs)
+    if local_planner:
+        local_planner.start()
 
+    print(f'start simulation loop: test_level {cfg.test_level}, loco_policy: {cfg.policy}, local_planner: {cfg.local_planner}')
     while simulation_app.is_running():
         start_time = time.time()
         with torch.inference_mode():
@@ -159,8 +193,9 @@ def run_simulator(cfg):
                 update_wm(actions, obs, depth_tensor)
 
             # # ROS2 data
-            # dm.pub_ros2_data()
-            # rclpy.spin_once(dm)
+            if cfg.data_access_method == "ros2":
+                dm.pub_ros2_data()
+                rclpy.spin_once(dm)
 
             # Camera follow
             if (cfg.camera_follow):
@@ -175,8 +210,11 @@ def run_simulator(cfg):
         rtf = min(1.0, sim_step_dt / elapsed_time)
         print(f"\rStep time: {actual_loop_time * 1000:.2f}ms, Real Time Factor: {rtf:.2f}", end='', flush=True)
 
-    # dm.destroy_node()
-    # rclpy.shutdown()
+    if local_planner:
+        local_planner.stop()
+    if cfg.data_access_method == "ros2":
+        dm.destroy_node()
+        rclpy.shutdown()
     simulation_app.close()
 
 

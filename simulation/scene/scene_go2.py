@@ -77,15 +77,17 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel,
-                               params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel,
+        # base_lin_vel = ObsTerm(func=mdp.base_lin_vel,
+        #                        params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
+
+        # Note: himloco policy velocity command is ahead, wmp policy velocity command is behind
+        base_vel_cmd = ObsTerm(func=base_vel_cmd)
+
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25,
                                params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
         projected_gravity = ObsTerm(func=mdp.projected_gravity,
                                     params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
                                     noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05))
-        # velocity command
-        base_vel_cmd = ObsTerm(func=base_vel_cmd)
 
         joint_pos = ObsTerm(func=mdp.joint_pos_rel,
                             params={"asset_cfg": SceneEntityCfg(name="legged_robot")})

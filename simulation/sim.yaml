@@ -1,16 +1,52 @@
 defaults:
   - _self_
 
-robot_name: aliengo   # a1 go2 aliengo
+test_level: 1     # 0-'locomotion_level' 1-'local_planner_level' 2-'system_level'
+robot_name: a1    # a1 go2 aliengo
 num_envs: 1
-freq: 50 # can only be divisible by 200
+
+# locomotion config
+policy: him_loco
+policy_device: cuda:0
+
+# planner config
+local_planner: depth_planner
+data_access_method: direct    # 'direct' 'ros2'
+local_planner_freq: 20.0
+goal_type: blind              # dont know world pose: 'blind' todo: 'pose'
+goal_cmd: [1.0, 0.0, 0.0]
+
+# cmd_vel post-process
+diagonal_to_yaw: False
+walk_while_yaw: True
+
+# sim config
 camera_follow: True
+init_pos: [0, 0, 0.5]  # -26 -31 -16
+#init_rot: [0.707, 0.0, 0.0, -0.707]
+init_rot: [1.0, 0.0, 0.0, 0.0]
+view_pos: [0, 0, 30.0]
+view_rot: [0, 0, 0]   # euler degree angles
 
-#env_name: obstacle-dense
+# isaac sensor
+camera_freq: 50
+#camera_pos: [0.32, 0.0, 0.2]
+#camera_res: [640, 480]
+#camera_fov: 58.0  # horizontal fov
+camera_pos: [0.32, 0.0, 0.03]
+camera_res: [87, 58]
+camera_fov: 87.0  # horizontal fov
+camera_depth: True
+
+enable_lidar: False
+enable_camera: True
+
+# environment config
+env_name: tunnel
+#env_name: obstacle-medium
 #env_name: omni
-env_name: carla
+#env_name: carla
 #env_name: matterport3d
-
 # for omni
 #scene_id: Simple_Warehouse/warehouse
 #scene_id: Simple_Warehouse/warehouse_with_forklifts
@@ -19,27 +55,18 @@ env_name: carla
 #scene_id: Hospital/hospital
 #scene_id: Office/office
 # for matterport3d
-#scene_id: GdvgFV5R1Z5
-scene_id: 2n8kARJN3HM
+scene_id: GdvgFV5R1Z5
+#scene_id: 2n8kARJN3HM
 
-sensor:
-  enable_lidar: True
-  enable_camera: True
+# ros2 config
+ros2_sensor:
   color_image: True
   depth_image: True
   semantic_segmentation: True
 
+# ui config
 sim_app:
   anti_aliasing: 0
   width: 1280
   height: 720
   hide_ui: False
-
-policy: wtw_loco
-policy_device: cuda:0
-
-init_pos: [0, 0, 0.5]  # -26
-#init_rot: [0.707, 0.0, 0.0, -0.707]
-init_rot: [1.0, 0.0, 0.0, 0.0]
-view_pos: [0, 0, 30.0]
-view_rot: [0, 0, 0]   # euler degree angles

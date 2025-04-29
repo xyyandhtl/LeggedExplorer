@@ -1,17 +1,7 @@
 from omni.isaac.lab.terrains import TerrainImporterCfg, TerrainImporter
 from omni.isaac.lab.terrains import TerrainGeneratorCfg
-from omni.isaac.lab.terrains.height_field import (
-    HfPyramidSlopedTerrainCfg,
-    HfDiscreteObstaclesTerrainCfg,
-    HfInvertedPyramidSlopedTerrainCfg,
-    HfWaveTerrainCfg,
-    HfPyramidStairsTerrainCfg,
-    HfInvertedPyramidStairsTerrainCfg,
-    HfRandomUniformTerrainCfg,
-    HfSteppingStonesTerrainCfg,
-)
 
-from .hf_terrain import HfUniformDiscreteObstaclesTerrainCfg
+from .hf_terrain import HfUniformDiscreteObstaclesTerrainCfg, HfTunnelTerrainCfg
 from .common import add_semantic_label
 
 
@@ -86,6 +76,38 @@ def create_obstacle_dense_env():
                 border_width=5,
                 platform_width=2.0,
                 avoid_positions=[[0, 0]]
+            )},
+        ),
+        visual_material=None,
+    )
+    TerrainImporter(terrain)
+
+
+def create_tunnel_env():
+    add_semantic_label()
+    # Terrain
+    terrain = TerrainImporterCfg(
+        prim_path="/World/TunnelTerrain",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            seed=0,
+            size=(3, 3),
+            border_width=3,
+            # border_height=3.0,
+            num_rows=10,
+            num_cols=1,
+            color_scheme="height",
+            sub_terrains={"t1": HfTunnelTerrainCfg(
+                # seed=0,
+                # size=(50, 50),
+                obstacle_width_range=(0.5, 1.0),
+                obstacle_height_range=(0.1, 1.0),
+                num_obstacles=3,
+                obstacles_distance=0.4,
+                # border_width=5,
+                platform_width=0.0,
+                avoid_positions=[],
+                wall_height=1.0,
             )},
         ),
         visual_material=None,

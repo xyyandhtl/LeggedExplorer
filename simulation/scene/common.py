@@ -32,7 +32,9 @@ class CurriculumCfg:
 
 
 def camera_follow(env, robot_prim='legged_robot'):
-    if (env.unwrapped.scene.num_envs == 1):
+    if not hasattr(env, "unwrapped"):
+        env = env.env
+    if env.unwrapped.scene.num_envs == 1:
         robot_position = env.unwrapped.scene[robot_prim].data.root_state_w[0, :3].cpu().numpy()
         robot_orientation = env.unwrapped.scene[robot_prim].data.root_state_w[0, 3:7].cpu().numpy()
         rotation = R.from_quat([robot_orientation[1], robot_orientation[2],
@@ -40,8 +42,8 @@ def camera_follow(env, robot_prim='legged_robot'):
         yaw = rotation.as_euler('zyx')[0]
         yaw_rotation = R.from_euler('z', yaw).as_matrix()
         set_camera_view(
-            yaw_rotation.dot(np.asarray([-2., 2., 0.5])) + robot_position,
-            # yaw_rotation.dot(np.asarray([-2.5, 0, 0.8])) + robot_position,
+            # yaw_rotation.dot(np.asarray([-2., 2., 0.5])) + robot_position,
+            yaw_rotation.dot(np.asarray([-1.5, 0, 0.4])) + robot_position,
             robot_position
         )
 

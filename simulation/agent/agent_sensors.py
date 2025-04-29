@@ -34,18 +34,30 @@ class SensorManager:
             lidar_annotators.append(annotator)
         return lidar_annotators
 
-    def add_camera(self, freq):
+    def add_camera(self, cfg):
+        horizontal_fov = cfg.camera_fov  # 58 degrees
         cameras = []
         for env_idx in range(self.num_envs):
             camera = Camera(
                 prim_path=f"/World/envs/env_{env_idx}/{self.robot_name}/{self.base_name}/front_cam",
-                translation=np.array([0.4, 0.0, 0.2]),
-                frequency=freq,
-                resolution=(640, 480),
+                translation=np.array(cfg.camera_pos),
+                frequency=cfg.camera_freq,
+                resolution=(cfg.camera_res[0], cfg.camera_res[1]),
                 orientation=rot_utils.euler_angles_to_quats(np.array([0, 0, 0]), degrees=True),
             )
             camera.initialize()
-            camera.set_focal_length(1.5)
+            near, far = camera.get_clipping_range()
+            focal_length_sim = camera.get_horizontal_aperture() / 2 / np.tan(np.radians(horizontal_fov) / 2)
+            print(f'original camera focal_length: {camera.get_focal_length()}, set to {focal_length_sim}')
+            camera.set_focal_length(focal_length_sim)
+            print(f'camera fov {np.degrees(camera.get_horizontal_fov())} degrees')
+            if cfg.camera_depth:
+                print(f'original camera clipping range: {near}/{far}, set to 0.05/6.0')
+                camera.set_clipping_range(near_distance=0.05, far_distance=6.0)
+                camera.add_distance_to_image_plane_to_frame()
+            else:
+                print(f'original camera clipping range: {near}/{far}, set to 0.1/1000.0')
+                camera.set_clipping_range(near_distance=0.1, far_distance=1000.0)
             cameras.append(camera)
         return cameras
 
