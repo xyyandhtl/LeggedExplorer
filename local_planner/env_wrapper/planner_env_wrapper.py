@@ -20,7 +20,7 @@ class LocalPlannerEnvWrapper:
         print(f'cur_cmd_vel: {cur_cmd_vel}')
         obs, reward, done, info = self.env.step(action)
         if self.env.obs_history is not None:
-            print(f'obs_history shape {self.env.obs_history.shape}, obs shape {obs.shape}')
+            # print(f'obs_history shape {self.env.obs_history.shape}, obs shape {obs.shape}')
             self.env.obs_history[:, self.command_start:self.command_start+3] = torch.from_numpy(cur_cmd_vel).to(obs.device)
         obs[:, self.command_start:self.command_start+3] = torch.from_numpy(cur_cmd_vel).to(obs.device)
         # todo: wtw process
