@@ -31,7 +31,7 @@ dynamic_detector_node:
     filtering_BBox_IOU_threshold: 0.05 # min IOU to merge bbox
     
     # DBSCAN
-    ground_height: 0.1 # height of ground to remove ground points
+    ground_height: 0.3 # height of ground to remove ground points
     dbscan_min_points_cluster: 20 # 20: 4.0m range; 30: 3.5m range 40: 3.0m range
     dbscan_search_range_epsilon: 0.1 # searching range radius
     voxel_occupied_thresh: 5 # min num of points for a voxel to be occupied in voxel filter

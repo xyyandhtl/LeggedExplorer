@@ -42,7 +42,7 @@ class Go2SimCfg(InteractiveSceneCfg):
     cylinder_light.init_state.pos = (0, 0, 2.0)
 
     # Go2 Robot
-    unitree_go2: ArticulationCfg = UNITREE_GO2_CFG.replace(
+    legged_robot: ArticulationCfg = UNITREE_GO2_CFG.replace(
         prim_path="{ENV_REGEX_NS}/Go2",
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(0, 0, 0.40),
@@ -56,9 +56,9 @@ class Go2SimCfg(InteractiveSceneCfg):
             joint_vel={".*": 0.0},
         ),
     )
-    unitree_go2.actuators["base_legs"].stiffness = 40.0
-    unitree_go2.actuators["base_legs"].damping = 1.0
-    print('joint_names_expr:', unitree_go2.actuators["base_legs"].joint_names_expr)
+    legged_robot.actuators["base_legs"].stiffness = 40.0
+    legged_robot.actuators["base_legs"].damping = 1.0
+    print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
 
     # Go2 foot contact sensor
     contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Go2/.*_foot", history_length=3, track_air_time=True)
@@ -66,7 +66,7 @@ class Go2SimCfg(InteractiveSceneCfg):
 @configclass
 class ActionsCfg:
     """Action specifications for the environment."""
-    joint_pos = mdp.JointPositionActionCfg(asset_name="unitree_go2", joint_names=[".*"])
+    joint_pos = mdp.JointPositionActionCfg(asset_name="legged_robot", joint_names=[".*"])
 
 @configclass
 class ObservationsCfg:
@@ -77,20 +77,22 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel,
-                               params={"asset_cfg": SceneEntityCfg(name="unitree_go2")})
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel,
-                               params={"asset_cfg": SceneEntityCfg(name="unitree_go2")})
-        projected_gravity = ObsTerm(func=mdp.projected_gravity,
-                                    params={"asset_cfg": SceneEntityCfg(name="unitree_go2")},
-                                    noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05))
-        # velocity command
+        # base_lin_vel = ObsTerm(func=mdp.base_lin_vel,
+        #                        params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
+
+        # Note: himloco policy velocity command is ahead, wmp policy velocity command is behind
         base_vel_cmd = ObsTerm(func=base_vel_cmd)
 
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25,
+                               params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
+        projected_gravity = ObsTerm(func=mdp.projected_gravity,
+                                    params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
+                                    noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05))
+
         joint_pos = ObsTerm(func=mdp.joint_pos_rel,
-                            params={"asset_cfg": SceneEntityCfg(name="unitree_go2")})
+                            params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
         joint_vel = ObsTerm(func=mdp.joint_vel_rel,
-                            params={"asset_cfg": SceneEntityCfg(name="unitree_go2")})
+                            params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
         actions = ObsTerm(func=mdp.last_action)
         
         # Height scan
@@ -109,7 +111,7 @@ class ObservationsCfg:
 class CommandsCfg:
     """Command specifications for the MDP."""
     base_vel_cmd = mdp.UniformVelocityCommandCfg(
-        asset_name="unitree_go2",
+        asset_name="legged_robot",
         resampling_time_range=(0.0, 0.0),
         debug_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(

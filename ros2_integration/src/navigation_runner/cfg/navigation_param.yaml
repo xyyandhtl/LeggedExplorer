@@ -1,6 +1,6 @@
 navigation_node:
   ros__parameters:
-    vel_limit: 2.5
+    vel_limit: 1.8
     odom_topic: /legged/odom
     cmd_topic: /legged/cmd_vel
     checkpoint_file: navrl_checkpoint.pt
