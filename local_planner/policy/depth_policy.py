@@ -25,9 +25,17 @@ class LocalPlannerDepth(LocalPlannerIsaac):
                 self.commands[env_idx, :] = 0
                 continue
             depth_image = np.nan_to_num(depth, nan=0.0, posinf=0.0, neginf=0.0)
+            # 归一化到 0-255（你也可以设置 max_depth 自定义范围）
+            # depth_normalized = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX)
+            # depth_normalized = depth_normalized.astype(np.uint8)
+            # # 应用伪彩色映射
+            # depth_colored = cv2.applyColorMap(depth_normalized, cv2.COLORMAP_JET)
+            # # 保存图片
+            # cv2.imwrite("depth_visualization.png", depth_colored)
+
             # self.camera_buf[env_idx, :] = depth_image.flatten()
             # depth_image = depth_image / 6
-            depth_image[depth_image > 1] = 1
+            depth_image[depth_image >= 5.0] = 0   # clip depth due to inaccuracy
 
             mid_pos = int(0.5 * depth_image.shape[1])
             l_idx, r_idx = -1, -1
@@ -217,7 +225,7 @@ class LocalPlannerDepth(LocalPlannerIsaac):
 
             if abs(self.env_last_action[env_idx][2]) >= 0.2:
                 self.commands[env_idx, :] = self.commands[env_idx, :] * 0.5 + self.env_last_action[env_idx] * 0.5
-            self.env_last_action[env_idx] = self.commands[env_idx, :].clone()
+            self.env_last_action[env_idx] = self.commands[env_idx, :].copy()
             # print(l_dis, r_dis, l_dis2, r_dis2)
 
 
