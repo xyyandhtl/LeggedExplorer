@@ -19,7 +19,8 @@ import simulation.agent.agent_ctrl as agent_ctrl
 
 ext_manager = omni.kit.app.get_app().get_extension_manager()
 ext_manager.set_extension_enabled_immediate("omni.isaac.ros2_bridge", True)
-from omni.isaac.ros2_bridge import read_camera_info
+# from omni.isaac.ros2_bridge import read_camera_info
+from isaacsim.ros2.bridge import read_camera_info
 
 
 robot_prim_dict = {

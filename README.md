@@ -3,7 +3,7 @@
 ## Installation
 **Step Pre:** Only test on Ubuntu22.04
 
-**Step I:** Follow the [Isaac Lab official documentation](https://isaac-sim.github.io/IsaacLab/v1.4.1/source/setup/installation/pip_installation.html) to install the Isaac Sim 4.2.0 and Isaac Lab 1.4.1.
+**Step I:** Follow the [Isaac Lab official documentation](https://isaac-sim.github.io/IsaacLab/v2.1.0/source/setup/installation/pip_installation.html) to install the Isaac Sim 4.5.0 and Isaac Lab 2.1.0. (isaacsim4.2+isaaclab1.4.1 last commit: 9a246cd9593751c2f98c7bf47f4be0650104d548)
 
 **Step II:** Install [ROS2 Humble](https://docs.ros.org/en/humble/index.html) with the official installation guide.
 

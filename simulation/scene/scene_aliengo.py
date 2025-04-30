@@ -1,17 +1,17 @@
 import os
 
-from omni.isaac.lab.actuators import DCMotorCfg
-from omni.isaac.lab.scene import InteractiveSceneCfg
-from omni.isaac.lab.sensors import RayCasterCfg, patterns, ContactSensorCfg
-from omni.isaac.lab.utils import configclass
-from omni.isaac.lab.assets import ArticulationCfg, AssetBaseCfg
-import omni.isaac.lab.sim as sim_utils
-import omni.isaac.lab.envs.mdp as mdp
-from omni.isaac.lab.managers import ObservationGroupCfg as ObsGroup
-from omni.isaac.lab.managers import ObservationTermCfg as ObsTerm
-from omni.isaac.lab.envs import ManagerBasedRLEnvCfg
-from omni.isaac.lab.managers import SceneEntityCfg
-from omni.isaac.lab.utils.noise import UniformNoiseCfg
+from isaaclab.actuators import DCMotorCfg
+from isaaclab.scene import InteractiveSceneCfg
+from isaaclab.sensors import RayCasterCfg, patterns, ContactSensorCfg
+from isaaclab.utils import configclass
+from isaaclab.assets import ArticulationCfg, AssetBaseCfg
+import isaaclab.sim as sim_utils
+import isaaclab.envs.mdp as mdp
+from isaaclab.managers import ObservationGroupCfg as ObsGroup
+from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.managers import SceneEntityCfg
+from isaaclab.utils.noise import UniformNoiseCfg
 from simulation.agent.agent_ctrl import base_vel_cmd
 
 from .common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
@@ -39,10 +39,15 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.55),
         joint_pos={
-            ".*L_hip_joint": 0.1,
-            ".*R_hip_joint": -0.1,
+            # ".*L_hip_joint": 0.1,
+            # ".*R_hip_joint": -0.1,
+            # "F[L,R]_thigh_joint": 0.8,
+            # "R[L,R]_thigh_joint": 1.0,
+            # ".*_calf_joint": -1.5,
+            ".*L_hip_joint": 0.0,
+            ".*R_hip_joint": -0.0,
             "F[L,R]_thigh_joint": 0.8,
-            "R[L,R]_thigh_joint": 1.0,
+            "R[L,R]_thigh_joint": 0.8,
             ".*_calf_joint": -1.5,
         },
         joint_vel={".*": 0.0},

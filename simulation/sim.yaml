@@ -1,8 +1,8 @@
 defaults:
   - _self_
 
-test_level: 1     # 0-'locomotion_level' 1-'local_planner_level' 2-'system_level'
-robot_name: a1    # a1 go2 aliengo
+test_level: 0     # 0-'locomotion_level' 1-'local_planner_level' 2-'system_level'
+robot_name: aliengo    # a1 go2 aliengo
 num_envs: 1
 
 # locomotion config

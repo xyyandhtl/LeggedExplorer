@@ -6,6 +6,8 @@ import time
 import math
 import sys
 import numpy as np
+import omni
+import carb
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -18,14 +20,15 @@ def run_simulator(cfg):
     simulation_app = SimulationApp({"headless": False, "anti_aliasing": cfg.sim_app.anti_aliasing,
                                     "width": cfg.sim_app.width, "height": cfg.sim_app.height,
                                     "hide_ui": cfg.sim_app.hide_ui})
-    # isaacsim extensions can only be import after app start?
-    import omni
-    import carb
+    # for not setting
+    settings_interface = carb.settings.get_settings()
+    settings_interface.set("/persistent/isaac/asset_root/cloud",
+                           "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.5")
     from simulation.ros2_bridge.agent_ros2_bridge import RobotDataManager
     import simulation.agent.agent_sensors as agent_sensors
     import simulation.agent.agent_ctrl as agent_ctrl
     from simulation.scene.common import camera_follow
-    from omni.isaac.lab.envs import ManagerBasedRLEnv
+    from isaaclab.envs import ManagerBasedRLEnv
     print(f'[use cfg] {cfg}')
 
     # ===============================================================================================

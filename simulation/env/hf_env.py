@@ -1,5 +1,5 @@
-from omni.isaac.lab.terrains import TerrainImporterCfg, TerrainImporter
-from omni.isaac.lab.terrains import TerrainGeneratorCfg
+from isaaclab.terrains import TerrainImporterCfg, TerrainImporter
+from isaaclab.terrains import TerrainGeneratorCfg
 
 from .hf_terrain import HfUniformDiscreteObstaclesTerrainCfg, HfTunnelTerrainCfg
 from .common import add_semantic_label
