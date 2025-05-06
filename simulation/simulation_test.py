@@ -35,20 +35,17 @@ def run_simulator(cfg):
     # robot env setup
     if cfg.robot_name == 'go2':
         from simulation.scene.scene_go2 import Go2RSLEnvCfg
-        # Go2 Environment setup
         env_cfg = Go2RSLEnvCfg()
         print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
         # sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
     elif cfg.robot_name == 'a1':
         from simulation.scene.scene_a1 import A1RSLEnvCfg
-        # Go2 Environment setup
         env_cfg = A1RSLEnvCfg()
         env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
         env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
         sm = agent_sensors.SensorManager(cfg.num_envs, 'A1')
     elif cfg.robot_name == 'aliengo':
         from simulation.scene.scene_aliengo import AliengoRSLEnvCfg
-        # Go2 Environment setup
         env_cfg = AliengoRSLEnvCfg()
         env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
         env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
@@ -74,7 +71,6 @@ def run_simulator(cfg):
         from locomotion.policy.wmp_loco import load_policy_wmp, world_model_data_init, update_wm
         policy = load_policy_wmp(robot_name=cfg.robot_name, device=cfg.policy_device)
         depths = sm.add_camera_wmp(cfg.camera_freq)
-        # raise NotImplementedError
     elif cfg.policy == "him_loco":
         from locomotion.env_cfg.him_env import HIMLocoEnvWrapper
         env = HIMLocoEnvWrapper(env)
