@@ -1,15 +1,15 @@
-from omni.isaac.lab.scene import InteractiveSceneCfg
-from omni.isaac.lab_assets.unitree import UNITREE_GO2_CFG
-from omni.isaac.lab.sensors import RayCasterCfg, patterns, ContactSensorCfg
-from omni.isaac.lab.utils import configclass
-from omni.isaac.lab.assets import ArticulationCfg, AssetBaseCfg
-import omni.isaac.lab.sim as sim_utils
-import omni.isaac.lab.envs.mdp as mdp
-from omni.isaac.lab.managers import ObservationGroupCfg as ObsGroup
-from omni.isaac.lab.managers import ObservationTermCfg as ObsTerm
-from omni.isaac.lab.envs import ManagerBasedRLEnvCfg
-from omni.isaac.lab.managers import SceneEntityCfg
-from omni.isaac.lab.utils.noise import UniformNoiseCfg
+from isaaclab.scene import InteractiveSceneCfg
+from isaaclab_assets.unitree import UNITREE_GO2_CFG
+from isaaclab.sensors import RayCasterCfg, patterns, ContactSensorCfg
+from isaaclab.utils import configclass
+from isaaclab.assets import ArticulationCfg, AssetBaseCfg
+import isaaclab.sim as sim_utils
+import isaaclab.envs.mdp as mdp
+from isaaclab.managers import ObservationGroupCfg as ObsGroup
+from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.managers import SceneEntityCfg
+from isaaclab.utils.noise import UniformNoiseCfg
 
 from simulation.agent.agent_ctrl import base_vel_cmd
 from common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg

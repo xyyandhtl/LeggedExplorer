@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from omni.isaac.lab.utils import configclass
+from isaaclab.utils import configclass
 from omni.isaac.core.utils.viewports import set_camera_view
 
 robot_env_prim_map = {

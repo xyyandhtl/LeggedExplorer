@@ -1,4 +1,4 @@
-from omni.isaac.lab.terrains.height_field.utils import height_field_to_mesh
+from isaaclab.terrains.height_field.utils import height_field_to_mesh
 import numpy as np
 import time
 
@@ -157,8 +157,8 @@ def tunnel_obstacles_terrain(difficulty: float, cfg) -> np.ndarray:
     return np.rint(hf_raw).astype(np.int16)
 
 
-from omni.isaac.lab.terrains.height_field.hf_terrains_cfg import HfTerrainBaseCfg
-from omni.isaac.lab.utils import configclass
+from isaaclab.terrains.height_field.hf_terrains_cfg import HfTerrainBaseCfg
+from isaaclab.utils import configclass
 from dataclasses import MISSING
 
 @configclass

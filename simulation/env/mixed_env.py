@@ -1,7 +1,7 @@
-from omni.isaac.lab.terrains import TerrainImporterCfg, TerrainImporter
-from omni.isaac.lab.terrains import TerrainGeneratorCfg
-from omni.isaac.lab.terrains.trimesh import *
-from omni.isaac.lab.terrains.height_field import *
+from isaaclab.terrains import TerrainImporterCfg, TerrainImporter
+from isaaclab.terrains import TerrainGeneratorCfg
+from isaaclab.terrains.trimesh import *
+from isaaclab.terrains.height_field import *
 
 
 def create_mixed_terrain_env():

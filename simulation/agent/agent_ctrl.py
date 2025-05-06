@@ -1,6 +1,6 @@
 import torch
 import carb
-from omni.isaac.lab.envs import ManagerBasedEnv
+from isaaclab.envs import ManagerBasedEnv
 
 base_vel_cmd_input = None
 lx_base_height = 0.0

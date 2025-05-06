@@ -1,5 +1,5 @@
 import torch
-# from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import RslRlVecEnvWrapper
+# from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
 
 
 class LocalPlannerEnvWrapper:

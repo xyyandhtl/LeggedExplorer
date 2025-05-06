@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import RslRlVecEnvWrapper
+from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
 
 from simulation.agent.agent_ctrl import (cmd_base_height, cmd_freq, cmd_stance_length, cmd_stance_width,
                                          cmd_footswing, cmd_pitch, cmd_roll, cmd_gait_type) # all float except gait_type
