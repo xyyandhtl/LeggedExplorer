@@ -97,7 +97,17 @@ class AliengoSimCfg(InteractiveSceneCfg):
     print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
 
     # Aliengo foot contact sensor
-    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*_foot", history_length=3, track_air_time=True)
+    # contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*_foot", history_length=3, track_air_time=True)
+
+    height_scanner = RayCasterCfg(
+        prim_path="{ENV_REGEX_NS}/Aliengo/trunk",
+        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
+        attach_yaw_only=True,
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[5.0, 5.0]),
+        debug_vis=True,
+        mesh_prim_paths=["/World/TunnelTerrain"],
+        max_distance=100.0,
+    )
 
 @configclass
 class ActionsCfg:
@@ -132,6 +142,12 @@ class ObservationsCfg:
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, scale=0.05,
                             params={"asset_cfg": SceneEntityCfg(name="legged_robot",)})
         actions = ObsTerm(func=mdp.last_action)
+
+        # height_scan = ObsTerm(func=mdp.height_scan, scale=1,
+        #                       params={"sensor_cfg": SceneEntityCfg("height_scanner"),
+        #                               "offset": 0.26878},
+        #                       # clip=(-1.0, 1.0),
+        #                       )
 
         def __post_init__(self) -> None:
             self.enable_corruption = False

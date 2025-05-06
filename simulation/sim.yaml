@@ -22,7 +22,7 @@ walk_while_yaw: True
 
 # sim config
 camera_follow: True
-init_pos: [-16, 0, 0.5]  # -26 -31 -16
+init_pos: [0, 0, 0.5]  # -26 -31 -16
 #init_rot: [0.707, 0.0, 0.0, -0.707]
 init_rot: [1.0, 0.0, 0.0, 0.0]
 view_pos: [0, 0, 30.0]
@@ -42,10 +42,10 @@ enable_lidar: False
 enable_camera: True
 
 # environment config
-env_name: tunnel
+#env_name: tunnel
 #env_name: obstacle-medium
 #env_name: omni
-#env_name: carla
+env_name: carla
 #env_name: matterport3d
 # for omni
 #scene_id: Simple_Warehouse/warehouse

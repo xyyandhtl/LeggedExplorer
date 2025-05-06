@@ -84,10 +84,10 @@ class RoverSceneCfg(MarsTerrainSceneCfg):
 
     height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Robot/Body",
-        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 10.0]),
+        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 3.0]),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[5.0, 5.0]),
-        debug_vis=False,
+        debug_vis=True,
         mesh_prim_paths=["/World/terrain/hidden_terrain"],
         max_distance=100.0,
     )
@@ -286,7 +286,7 @@ class RoverEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.dt = 1 / 30.0
         self.decimation = 6
         self.episode_length_s = 150
-        self.viewer.eye = (-6.0, -6.0, 3.5)
+        self.viewer.eye = (-3.0, -3.0, 2.0)
 
         # update sensor periods
         if self.scene.height_scanner is not None:

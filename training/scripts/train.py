@@ -4,8 +4,9 @@ import os
 import random
 import sys
 from datetime import datetime
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-import carb
 import gymnasium as gym
 from isaaclab.app import AppLauncher
 
@@ -34,6 +35,7 @@ sys.argv = [sys.argv[0]] + hydra_args
 
 app_launcher = AppLauncher(args_cli)
 
+import carb
 from isaaclab_rl.skrl import SkrlVecEnvWrapper  # noqa: E402
 
 simulation_app = app_launcher.app
