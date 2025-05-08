@@ -96,6 +96,7 @@ class SensorManager:
                 debug_vis=False,
             )
             ray_caster = RayCaster(cfg=ray_caster_cfg)
+            print('init ray_caster.data.ray_hits_w', ray_caster.data.ray_hits_w)
             ray_casters.append(ray_caster)
         return ray_casters
 

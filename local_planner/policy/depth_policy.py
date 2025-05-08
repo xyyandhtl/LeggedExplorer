@@ -15,12 +15,12 @@ class LocalPlannerDepth(LocalPlannerIsaac):
         self.env_right_dis = np.zeros((self.num_envs, 1))
 
     def infer_action(self):
-        if not self.sensor_data['depth']:
+        if not self.depth_data:
             self.commands = np.zeros((self.num_envs, 3))
             return
-        assert len(self.sensor_data['depth']) == self.num_envs, \
-            f"depth data length {len(self.sensor_data['depth'])} != num_envs {self.num_envs}"
-        for env_idx, depth in enumerate(self.sensor_data['depth']):
+        assert len(self.depth_data) == self.num_envs, \
+            f"depth data length {len(self.depth_data)} != num_envs {self.num_envs}"
+        for env_idx, depth in enumerate(self.depth_data):
             if depth is None:
                 self.commands[env_idx, :] = 0
                 continue

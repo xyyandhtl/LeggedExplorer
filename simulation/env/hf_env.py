@@ -1,10 +1,13 @@
 from isaaclab.terrains import TerrainImporterCfg, TerrainImporter
 from isaaclab.terrains import TerrainGeneratorCfg
+from isaaclab.terrains.terrain_generator import FlatPatchSamplingCfg
 
+# from training.envs.navigation.utils.terrains.terrain_importer import RoverTerrainImporter
 from .hf_terrain import HfUniformDiscreteObstaclesTerrainCfg, HfTunnelTerrainCfg
 from .common import add_semantic_label
 
 tunnel_terrain = TerrainImporterCfg(
+    class_type=TerrainImporter,
     prim_path="/World/Scene",
     terrain_type="generator",
     terrain_generator=TerrainGeneratorCfg(
@@ -26,6 +29,9 @@ tunnel_terrain = TerrainImporterCfg(
             platform_width=0.0,
             avoid_positions=[],
             wall_height=1.0,
+            flat_patch_sampling={
+                "target": FlatPatchSamplingCfg(num_patches=8, patch_radius=0.5, max_height_diff=0.05),
+            }
         )},
     ),
     visual_material=None,
@@ -46,7 +52,10 @@ sparse_obstacle_terrain = TerrainImporterCfg(
             num_obstacles=100 ,
             obstacles_distance=2.0,
             border_width=5,
-            avoid_positions=[[0, 0]]
+            avoid_positions=[[0, 0]],
+            flat_patch_sampling={
+                "target": FlatPatchSamplingCfg(num_patches=8, patch_radius=0.5, max_height_diff=0.05),
+            }
         )},
     ),
     visual_material=None,
@@ -67,7 +76,10 @@ medium_obstacle_terrain = TerrainImporterCfg(
             num_obstacles=200 ,
             obstacles_distance=2.0,
             border_width=5,
-            avoid_positions=[[0, 0]]
+            avoid_positions=[[0, 0]],
+            flat_patch_sampling={
+                "target": FlatPatchSamplingCfg(num_patches=8, patch_radius=0.5, max_height_diff=0.05),
+            }
         )},
     ),
     visual_material=None,
@@ -85,11 +97,14 @@ dense_obstacle_terrain = TerrainImporterCfg(
             size=(50, 50),
             obstacle_width_range=(1.0, 2.0),
             obstacle_height_range=(0.1, 1.0),
-            num_obstacles=500,
+            num_obstacles=200,
             obstacles_distance=0.4,
             border_width=5,
             platform_width=2.0,
-            avoid_positions=[[0, 0]]
+            avoid_positions=[[0, 0]],
+            flat_patch_sampling={
+                "target": FlatPatchSamplingCfg(num_patches=8, patch_radius=0.5, max_height_diff=0.05),
+            }
         )},
     ),
     visual_material=None,

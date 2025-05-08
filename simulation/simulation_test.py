@@ -52,7 +52,7 @@ def run_simulator(cfg):
         env_cfg = AliengoRSLEnvCfg()
         env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
         env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
-        env_cfg.scene.height_scanner = None
+        # env_cfg.scene.height_scanner = None
         # env_cfg.observations.policy.height_scan = None
         sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
@@ -85,11 +85,14 @@ def run_simulator(cfg):
     elif cfg.env_name == "carla":
         from simulation.env.carla_env import carla_terrain_cfg
         env_cfg.scene.terrain = carla_terrain_cfg()
+    else:
+        raise NotImplementedError(f'[{cfg.env_name}] env has not been implemented yet')
 
     # ===============================================================================================
     # Environment construct
     env = ManagerBasedRLEnv(env_cfg)
-    print("env.observation_manager.group_obs_dim", env.observation_manager.group_obs_dim)
+    print("env.observation_manager.group_obs_term_dim", env.observation_manager.group_obs_term_dim)
+    print("env.observation_manager.active_terms", env.observation_manager.active_terms['policy'])
 
     # ===============================================================================================
     # locomotion policy setup
@@ -128,6 +131,12 @@ def run_simulator(cfg):
         lidar_annotators = sm.add_rtx_lidar()
 
     # ===============================================================================================
+    # COTCalculator setup
+    # from simulation.agent.util import COTCalculator
+    # robot = env.unwrapped.scene.envs[0].robot
+    # cot_calculator = COTCalculator(robot.data, env_cfg.sim.dt)
+
+    # ===============================================================================================
     # local planner setup
     local_planner = None
     if cfg.test_level > 0:
@@ -136,6 +145,9 @@ def run_simulator(cfg):
             local_planner = LocalPlannerDepth(cfg)
             assert cameras is not None, 'Camera not enabled'
             local_planner.set_depth_cameras(cameras)
+        elif cfg.local_planner == 'rl_roverlab':
+            from local_planner.policy.roverlab_rl import LocalPlannerRLRoverLab
+            local_planner = LocalPlannerRLRoverLab(cfg)
         else:
             raise NotImplementedError(f'Local planner {cfg.local_planner} not implemented')
 
@@ -162,9 +174,9 @@ def run_simulator(cfg):
     # simulation loop
     sim_step_dt = float(env_cfg.sim.dt * env_cfg.decimation)
     obs, _ = env.reset()
-    obs_list = obs.cpu().numpy().tolist()[0]
-    obs_list = ["{:.3f}".format(v) for v in obs_list]
-    print(f'[init obs shape]: {obs.shape}: {obs_list}')
+    # obs_list = obs.cpu().numpy().tolist()[0]
+    # obs_list = ["{:.3f}".format(v) for v in obs_list]
+    print(f'[init obs shape]: {obs.shape}')
 
     if cfg.policy == "wmp_loco":
         # init world_model data

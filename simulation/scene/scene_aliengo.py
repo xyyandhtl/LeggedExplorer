@@ -1,4 +1,5 @@
 import os
+import math
 
 from isaaclab.actuators import DCMotorCfg
 from isaaclab.scene import InteractiveSceneCfg
@@ -9,9 +10,14 @@ import isaaclab.sim as sim_utils
 import isaaclab.envs.mdp as mdp
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.managers import ManagerTermBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.noise import UniformNoiseCfg
+
+import training.envs.navigation.mdp as user_mdp
+from training.envs.navigation.utils.terrains.commands_cfg import TerrainBasedPositionCommandCfg
+from training.envs.navigation.utils.terrains.terrain_importer import TerrainBasedPositionCommand
 from simulation.agent.agent_ctrl import base_vel_cmd
 
 from .common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
@@ -101,11 +107,11 @@ class AliengoSimCfg(InteractiveSceneCfg):
 
     height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Aliengo/trunk",
-        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
+        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.3]),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[5.0, 5.0]),
         debug_vis=True,
-        mesh_prim_paths=["/World/TunnelTerrain"],
+        mesh_prim_paths=["/World/Scene"],
         max_distance=100.0,
     )
 
@@ -143,11 +149,23 @@ class ObservationsCfg:
                             params={"asset_cfg": SceneEntityCfg(name="legged_robot",)})
         actions = ObsTerm(func=mdp.last_action)
 
-        # height_scan = ObsTerm(func=mdp.height_scan, scale=1,
-        #                       params={"sensor_cfg": SceneEntityCfg("height_scanner"),
-        #                               "offset": 0.26878},
-        #                       # clip=(-1.0, 1.0),
-        #                       )
+        # todo: use differnet scene env config for locomotion+(navigation) task.
+        # comment below obs terms if not with navigation
+        distance = ObsTerm(func=user_mdp.distance_to_target_euclidean, params={
+            "command_name": "target_pose"}, scale=0.11)
+        heading = ObsTerm(func=user_mdp.angle_to_target_observation, params={
+                "command_name": "target_pose",}, scale=1/math.pi,
+        )
+        angle_diff = ObsTerm(func=user_mdp.angle_diff, params={
+            "command_name": "target_pose"}, scale=1/math.pi
+        )
+
+        height_scan = ObsTerm(func=mdp.height_scan, scale=1,
+                              params={"sensor_cfg": SceneEntityCfg("height_scanner"),
+                                      "offset": 0.26878},
+                                      # "offset": 0.5},
+                              # clip=(-1.0, 1.0),
+                              )
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -167,6 +185,23 @@ class CommandsCfg:
             lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0), heading=(0, 0)
         ),
     )
+
+    target_pose = mdp.TerrainBasedPose2dCommandCfg(
+        asset_name="legged_robot",
+        resampling_time_range=(50.0, 50.0),
+        simple_heading=False,
+        debug_vis=True,
+        # ranges=mdp.TerrainBasedPose2dCommandCfg.Ranges(
+        #     heading=(-math.pi, math.pi),
+        #     # pos_x=(5, 15),
+        # ),
+        ranges=mdp.UniformPose2dCommandCfg.Ranges(
+            heading=(-math.pi, math.pi),
+            pos_x=(5, 15),
+            pos_y=(-5, 5),
+        ),
+    )
+    target_pose.goal_pose_visualizer_cfg.markers["arrow"].scale = (1.0, 1.0, 4.0)
 
 
 @configclass
