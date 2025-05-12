@@ -4,7 +4,6 @@ import argparse
 import traceback
 from typing import TYPE_CHECKING
 
-import carb
 import torch
 from isaaclab.app import AppLauncher
 
@@ -16,8 +15,12 @@ parser.add_argument("--num_envs", type=int, default=1,
 args_cli = parser.parse_args()
 
 app_launcher = AppLauncher(args_cli)
+import carb
 simulation_app = app_launcher.app
 
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 import isaaclab.sim as sim_utils  # noqa: F401, E402
 from isaaclab.assets import Articulation, ArticulationCfg, AssetBaseCfg  # noqa: F401, E402
 from isaaclab.scene import InteractiveScene, InteractiveSceneCfg  # noqa: F401, E402
@@ -26,7 +29,7 @@ from isaaclab.utils import configclass  # noqa: F401, E402
 
 # Avoid Circular Import
 from training.assets.robots.aau_rover_simple import AAU_ROVER_SIMPLE_CFG  # noqa: F401, E402
-from training.assets.robots.exomy import EXOMY_CFG  # noqa: F401, E402
+# from training.assets.robots.exomy import EXOMY_CFG  # noqa: F401, E402
 
 if TYPE_CHECKING:
     from training.envs.navigation.utils.articulation.articulation import RoverArticulation
@@ -46,7 +49,7 @@ class RoverEmptySceneCfg(InteractiveSceneCfg):
     )
 
     # Add the robot
-    robot: ArticulationCfg = EXOMY_CFG.replace(
+    robot: ArticulationCfg = AAU_ROVER_SIMPLE_CFG.replace(
         prim_path="/World/Robot")
 
 

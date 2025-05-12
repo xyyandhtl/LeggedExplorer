@@ -17,7 +17,7 @@ parser.add_argument("--video", action="store_true", default=False, help="Record 
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="AAURoverEnv-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="AliengoLeggedEnv-v0", help="Name of the task.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
 parser.add_argument("--agent", type=str, default="PPO", help="Name of the agent.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint to resume training.")
@@ -130,8 +130,9 @@ from skrl.utils import set_seed  # noqa: E402, F401
 import training.envs.navigation.robots  # noqa: E402, F401
 # Import agents
 from training.envs.navigation.learning.skrl import get_agent  # noqa: E402
-from training.utils.config import parse_skrl_cfg  # noqa: E402
-import training # noqa: E402
+from training.scripts.config import parse_skrl_cfg  # noqa: E402
+
+from simulation.agent.agent_sensors import create_view_camera
 
 def main():
     args_cli_seed = args_cli.seed if args_cli.seed is not None else random.randint(0, 100000000)
@@ -152,13 +153,21 @@ def main():
     # Get the observation and action spaces
     num_obs = env.observation_manager.group_obs_dim["policy"][0]
     num_actions = env.action_manager.action_term_dim[0]
+    # num_actions = 2
+    # num_obs = env.unwrapped.observation_manager.group_obs_dim["policy"][0]  # + num_actions
     observation_space = gym.spaces.Box(low=-math.inf, high=math.inf, shape=(num_obs,))
     action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
+    print(f'Observation space: {observation_space.shape}')
+    print(f'Action space: {action_space.shape}')
+    print(f'num envs: {env.num_envs}')
+    print(f'env obs space: {env.observation_space}')
+    print(f'env action space: {env.action_space}')
 
     trainer_cfg = experiment_cfg["trainer"]
     trainer_cfg["timesteps"] = 1000000
 
     agent = get_agent(args_cli.agent, env, observation_space, action_space, experiment_cfg, conv=True)
+    create_view_camera([38, 33, 2], [90, 0, 0])
 
     # Get the checkpoint path from the experiment configuration
     print(f'args_cli.task: {args_cli.task}')

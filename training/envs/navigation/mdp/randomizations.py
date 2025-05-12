@@ -8,7 +8,7 @@ from isaaclab.managers import SceneEntityCfg
 from ..utils.terrains.terrain_importer import RoverTerrainImporter
 
 
-def reset_root_state_rover(
+def reset_root_state_legged(
     env: ManagerBasedEnv, env_ids: torch.Tensor, asset_cfg: SceneEntityCfg, z_offset: float = 0.5
 ):
     """

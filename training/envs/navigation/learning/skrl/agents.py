@@ -8,7 +8,7 @@ from skrl.agents.torch.trpo import TRPO, TRPO_DEFAULT_CONFIG
 from skrl.memories.torch import RandomMemory
 
 from training.envs.navigation.learning.skrl.configure_models import get_models
-from training.utils.config import convert_skrl_cfg
+from training.scripts.config import convert_skrl_cfg
 
 
 def PPO_agent(experiment_cfg, observation_space: Box, action_space: Box, env: ManagerBasedRLEnv, conv):

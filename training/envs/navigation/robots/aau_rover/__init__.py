@@ -7,7 +7,7 @@ from . import env_cfg
 
 gym.register(
     id="AAURoverEnv-v0",
-    entry_point='training.envs.navigation.entrypoints:RoverEnv',
+    entry_point='training.envs.navigation.entrypoints:LeggedEnv',
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": env_cfg.AAURoverEnvCfg,
@@ -16,13 +16,13 @@ gym.register(
     }
 )
 
-gym.register(
-    id="AAURoverEnvCamera-v0",
-    entry_point='training.envs.navigation.entrypoints:RoverEnvCamera',
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point": env_cfg.AAURoverEnvCfg,
-        "best_model_path": f"{os.path.dirname(__file__)}/policies/best_agent.pt",
-        "get_agent_fn": get_agent,
-    }
-)
+# gym.register(
+#     id="AAURoverEnvCamera-v0",
+#     entry_point='training.envs.navigation.entrypoints:RoverEnvCamera',
+#     disable_env_checker=True,
+#     kwargs={
+#         "env_cfg_entry_point": env_cfg.AAURoverEnvCfg,
+#         "best_model_path": f"{os.path.dirname(__file__)}/policies/best_agent.pt",
+#         "get_agent_fn": get_agent,
+#     }
+# )

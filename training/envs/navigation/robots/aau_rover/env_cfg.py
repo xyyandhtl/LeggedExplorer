@@ -4,11 +4,11 @@ from isaaclab.utils import configclass
 
 import training.mdp as mdp
 from training.assets.robots.aau_rover_simple import AAU_ROVER_SIMPLE_CFG
-from training.envs.navigation.rover_env_cfg import RoverEnvCfg
+from training.envs.navigation.legged_env_cfg import LeggedEnvCfg
 
 
 @configclass
-class AAURoverEnvCfg(RoverEnvCfg):
+class AAURoverEnvCfg(LeggedEnvCfg):
     """Configuration for the AAU rover environment."""
 
     def __post_init__(self):

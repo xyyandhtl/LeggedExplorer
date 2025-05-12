@@ -2,7 +2,7 @@ from isaaclab.terrains import TerrainImporterCfg, TerrainImporter
 from isaaclab.terrains import TerrainGeneratorCfg
 from isaaclab.terrains.terrain_generator import FlatPatchSamplingCfg
 
-# from training.envs.navigation.utils.terrains.terrain_importer import RoverTerrainImporter
+# from training.envs.navigation.utils.terrains.terrain_importer import LeggedTerrainImporter
 from .hf_terrain import HfUniformDiscreteObstaclesTerrainCfg, HfTunnelTerrainCfg
 from .common import add_semantic_label
 
@@ -12,7 +12,7 @@ tunnel_terrain = TerrainImporterCfg(
     terrain_type="generator",
     terrain_generator=TerrainGeneratorCfg(
         seed=0,
-        size=(3, 3),
+        size=(6, 6),
         border_width=3,
         # border_height=3.0,
         num_rows=10,
@@ -23,7 +23,7 @@ tunnel_terrain = TerrainImporterCfg(
             # size=(50, 50),
             obstacle_width_range=(0.5, 1.0),
             obstacle_height_range=(0.1, 1.0),
-            num_obstacles=3,
+            num_obstacles=5,
             obstacles_distance=0.4,
             # border_width=5,
             platform_width=0.0,

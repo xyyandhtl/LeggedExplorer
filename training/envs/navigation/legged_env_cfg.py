@@ -21,7 +21,7 @@ from isaaclab.sim import PhysxCfg
 from isaaclab.sim import SimulationCfg as SimCfg
 from isaaclab.terrains import TerrainImporter, TerrainImporterCfg  # noqa: F401
 from isaaclab.utils import configclass
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise  # noqa: F401
+from isaaclab.utils.noise import UniformNoiseCfg  # noqa: F401
 
 ##
 # Scene Description
@@ -37,13 +37,13 @@ from training.envs.navigation.utils.terrains.terrain_importer import TerrainBase
 
 
 @configclass
-class RoverSceneCfg(MarsTerrainSceneCfg):
+class LeggedSceneCfg(MarsTerrainSceneCfg):
     """
-    Rover Scene Configuration
+    Legged Scene Configuration
 
     Note:
         Terrains can be changed by changing the parent class e.g.
-        RoverSceneCfg(MarsTerrainSceneCfg) -> RoverSceneCfg(DebugTerrainSceneCfg)
+        LeggedSceneCfg(MarsTerrainSceneCfg) -> LeggedSceneCfg(DebugTerrainSceneCfg)
 
     """
 
@@ -51,7 +51,7 @@ class RoverSceneCfg(MarsTerrainSceneCfg):
         prim_path="/World/DomeLight",
         spawn=sim_utils.DomeLightCfg(
             color_temperature=4500.0,
-            intensity=100,
+            intensity=10000,
             enable_color_temperature=True,
             texture_file=os.path.join(
                 os.path.dirname(os.path.abspath(training.__path__[0])),
@@ -76,17 +76,22 @@ class RoverSceneCfg(MarsTerrainSceneCfg):
     # AAU_ROVER_SIMPLE_CFG.replace(
     #     prim_path="{ENV_REGEX_NS}/Robot")
 
-    contact_sensor = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/.*_(Drive|Steer|Boogie|Body)",
-        filter_prim_paths_expr=["/World/terrain/obstacles/obstacles"],
-    )
+    # contact_sensor = ContactSensorCfg(
+    #     prim_path="{ENV_REGEX_NS}/Robot/.*_(Drive|Steer|Boogie|Body)",
+    #     filter_prim_paths_expr=["/World/terrain/obstacles/obstacles"],
+    # )
     # contact_sensor = None
+    # contact_sensor = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*_foot",
+    #                                   history_length=3, track_air_time=True)
+    contact_sensor = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*(foot|calf|thigh|hip|trunk)",
+                                      filter_prim_paths_expr=["/World/terrain/obstacles/obstacles"],)
 
     height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/Body",
+        prim_path="{ENV_REGEX_NS}/Robot/trunk",
         offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 3.0]),
         attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[5.0, 5.0]),
+        # pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[5.0, 5.0]),
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[3.0, 3.0]),
         debug_vis=True,
         mesh_prim_paths=["/World/terrain/hidden_terrain"],
         max_distance=100.0,
@@ -97,43 +102,68 @@ class RoverSceneCfg(MarsTerrainSceneCfg):
 class ActionsCfg:
     """Action"""
 
-    # We define the action space for the rover
+    # We define the action space for the legged
     actions: ActionTerm = MISSING
 
 
 @configclass
-class ObservationCfg:
+class ObservationsCfg:
     """Observation configuration for the task."""
 
     @configclass
-    class PolicyCfg(ObsGroup):
+    class LocoPolicyCfg(ObsGroup):
+        """Observations for policy group."""
+        # observation terms (order preserved)
+        # base_lin_vel = ObsTerm(func=mdp.base_lin_vel,
+        #                        params={"asset_cfg": SceneEntityCfg(name="robot")})
+        # base_vel_cmd = ObsTerm(func=base_vel_cmd)
+        base_velocity = ObsTerm(func=mdp.generated_commands, params={"command_name": "midlevel_command"})
+
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25,
+                               params={"asset_cfg": SceneEntityCfg(name="robot")})
+        projected_gravity = ObsTerm(func=mdp.projected_gravity,
+                                    params={"asset_cfg": SceneEntityCfg(name="robot")},
+                                    noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05))
+
+        joint_pos = ObsTerm(func=mdp.joint_pos_rel,
+                            params={"asset_cfg": SceneEntityCfg(name="robot",)})
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, scale=0.05,
+                            params={"asset_cfg": SceneEntityCfg(name="robot",)})
+        actions = ObsTerm(func=mdp.low_level_actions)
+
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = True
+
+
+    @configclass
+    class PlannerPolicyCfg(ObsGroup):
         actions = ObsTerm(func=mdp.last_action)
+        # todo: use differnet scene env config for locomotion+(navigation) task.
+        # comment below obs terms if not with navigation
         distance = ObsTerm(func=mdp.distance_to_target_euclidean, params={
-                           "command_name": "target_pose"}, scale=0.11)
-        heading = ObsTerm(
-            func=mdp.angle_to_target_observation,
-            params={
-                "command_name": "target_pose",
-            },
-            scale=1 / math.pi,
+            "command_name": "target_pose"}, scale=0.11)
+        heading = ObsTerm(func=mdp.angle_to_target_observation, params={
+                "command_name": "target_pose",}, scale=1/math.pi,
         )
-        angle_diff = ObsTerm(
-            func=mdp.angle_diff,
-            params={"command_name": "target_pose"},
-            scale=1 / math.pi
+        angle_diff = ObsTerm(func=mdp.angle_diff, params={
+            "command_name": "target_pose"}, scale=1/math.pi
         )
         height_scan = ObsTerm(
-            func=mdp.height_scan_rover,
+            func=mdp.height_scan,
             scale=1,
-            params={"sensor_cfg": SceneEntityCfg(name="height_scanner")},
+            params={"sensor_cfg": SceneEntityCfg(name="height_scanner"), "offset": 0.5},
+            noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05),
+            clip=(-1.0, 1.0),
         )
 
         def __post_init__(self):
             self.enable_corruption = True
             self.concatenate_terms = True
 
-    policy: PolicyCfg = PolicyCfg()
-
+    # observation groups
+    policy: PlannerPolicyCfg = PlannerPolicyCfg()
+    low_level_policy: LocoPolicyCfg = LocoPolicyCfg()
 
 @configclass
 class RewardsCfg:
@@ -216,19 +246,25 @@ class CommandsCfg:
         debug_vis=True,
     )
 
+    midlevel_command: mdp.MidLevelCommandGeneratorCfg = mdp.MidLevelCommandGeneratorCfg(
+        robot_attr = "robot",
+        debug_vis = True,
+        resampling_time_range=(0.0, 0.0),
+    )
+
 
 @configclass
 class EventCfg:
     """Randomization configuration for the task."""
     # startup_state = RandTerm(
-    #     func=mdp.reset_root_state_rover,
+    #     func=mdp.reset_root_state_legged,
     #     mode="startup",
     #     params={
     #         "asset_cfg": SceneEntityCfg(name="robot"),
     #     },
     # )
     reset_state = EventTerm(
-        func=mdp.reset_root_state_rover,
+        func=mdp.reset_root_state_legged,   # todo: check if valid for legged robot
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg(name="robot"),
@@ -243,12 +279,12 @@ class EventCfg:
 
 
 @configclass
-class RoverEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the rover environment."""
+class LeggedEnvCfg(ManagerBasedRLEnvCfg):
+    """Configuration for the legged environment."""
 
     # Create scene
-    scene: RoverSceneCfg = RoverSceneCfg(
-        num_envs=128, env_spacing=4.0, replicate_physics=False)
+    scene: LeggedSceneCfg = LeggedSceneCfg(
+        num_envs=1, env_spacing=4.0, replicate_physics=False)
 
     # Setup PhysX Settings
     sim: SimCfg = SimCfg(
@@ -272,7 +308,7 @@ class RoverEnvCfg(ManagerBasedRLEnvCfg):
     )
 
     # Basic Settings
-    observations: ObservationCfg = ObservationCfg()
+    observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
     events: EventCfg = EventCfg()
 
@@ -283,10 +319,11 @@ class RoverEnvCfg(ManagerBasedRLEnvCfg):
     # curriculum: CurriculumCfg = CurriculumCfg()
 
     def __post_init__(self):
-        self.sim.dt = 1 / 30.0
-        self.decimation = 6
-        self.episode_length_s = 150
-        self.viewer.eye = (-3.0, -3.0, 2.0)
+        self.sim.dt = 0.005     # 1 / 30.0
+        self.decimation = 6     # 6
+        self.episode_length_s = 150  # 150 seconds
+        self.viewer.eye = (38, 33, 2)
+        self.viewer.lookat = (33, 33, 0)
 
         # update sensor periods
         if self.scene.height_scanner is not None:

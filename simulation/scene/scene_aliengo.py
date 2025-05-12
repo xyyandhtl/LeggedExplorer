@@ -149,6 +149,8 @@ class ObservationsCfg:
                             params={"asset_cfg": SceneEntityCfg(name="legged_robot",)})
         actions = ObsTerm(func=mdp.last_action)
 
+    # @configclass
+    # class PlannerPolicyCfg(ObsGroup):
         # todo: use differnet scene env config for locomotion+(navigation) task.
         # comment below obs terms if not with navigation
         distance = ObsTerm(func=user_mdp.distance_to_target_euclidean, params={
@@ -173,6 +175,7 @@ class ObservationsCfg:
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
+    # planner_policy: PlannerPolicyCfg = PlannerPolicyCfg()
 
 @configclass
 class CommandsCfg:

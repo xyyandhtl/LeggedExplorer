@@ -16,7 +16,7 @@ parser.add_argument("--video", action="store_true", default=False, help="Record 
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="AAURoverEnv-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="AliengoLeggedEnv-v0", help="Name of the task.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
 parser.add_argument("--agent", type=str, default="PPO", help="Name of the agent.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint to resume training.")
@@ -128,7 +128,7 @@ from skrl.utils import set_seed  # noqa: E402, F401
 import training.envs.navigation.robots  # noqa: E402, F401
 # Import agents
 from training.envs.navigation.learning.skrl import get_agent  # noqa: E402
-from training.utils.config import parse_skrl_cfg  # noqa: E402
+from training.scripts.config import parse_skrl_cfg  # noqa: E402
 
 def train():
     args_cli_seed = args_cli.seed if args_cli.seed is not None else random.randint(0, 100000000)
@@ -149,6 +149,10 @@ def train():
     # Get the observation and action spaces
     num_obs = env.unwrapped.observation_manager.group_obs_dim["policy"][0]
     num_actions = env.unwrapped.action_manager.action_term_dim[0]
+    # substract (3 + 3 + 12 + 12 + 12)
+    # num_actions = env.unwrapped.action_manager.action_term_dim[0]
+    # num_actions = 2
+    # num_obs = env.unwrapped.observation_manager.group_obs_dim["policy"][0] + num_actions
     observation_space = gym.spaces.Box(low=-math.inf, high=math.inf, shape=(num_obs,))
     action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
     print(f'Observation space: {observation_space.shape}')

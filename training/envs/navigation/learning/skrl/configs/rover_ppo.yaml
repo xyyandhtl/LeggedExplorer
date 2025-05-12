@@ -52,11 +52,11 @@ agent:
   #rewards_shaper_scale: null
   # logging and checkpoint
   experiment:
-    directory: "rover"
+    directory: "legged"
     experiment_name: ""
     write_interval: 40
     checkpoint_interval: 400
-    wandb: True             # whether to use Weights & Biases
+    wandb: False             # whether to use Weights & Biases
 
 trainer:
   timesteps: 1000000

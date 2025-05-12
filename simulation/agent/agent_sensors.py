@@ -101,7 +101,7 @@ class SensorManager:
         return ray_casters
 
 def create_view_camera(pos, rot):
-    from omni.isaac.core.utils.prims import create_prim, set_prim_property
+    from isaacsim.core.utils.prims import create_prim, set_prim_property
     create_prim("/World/CustomCamera", "Camera",
                 translation=np.array(pos),
                 orientation=rot_utils.euler_angles_to_quats(np.array(rot), degrees=True))

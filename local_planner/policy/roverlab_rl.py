@@ -6,7 +6,7 @@ from gymnasium.spaces.box import Box
 from skrl.agents.torch.ppo import PPO, PPO_DEFAULT_CONFIG
 from skrl.memories.torch import RandomMemory
 
-from training.utils.config import convert_skrl_cfg
+from training.scripts.config import convert_skrl_cfg
 from training.envs.navigation.learning.skrl.models import (Critic, DeterministicActor, DeterministicNeuralNetwork,
                                                            DeterministicNeuralNetworkConv, GaussianNeuralNetwork,
                                                            GaussianNeuralNetworkConv)
