@@ -1,4 +1,5 @@
 # from typing import Any, Sequence
+import numpy as np
 import torch
 from isaaclab.envs.common import VecEnvObs
 from isaaclab.envs.manager_based_rl_env import ManagerBasedRLEnv
@@ -152,5 +153,16 @@ class LeggedEnv(ManagerBasedRLEnv):
         assert not torch.isinf(self.obs_buf['policy']).any(), "Observation contains Inf values"
         # assert torch.isposinf(self.obs_buf['policy']).any(), "Observation contains posInf values"
         # assert torch.isneginf(self.obs_buf['policy']).any(), "Observation contains negInf values"
+        # 保存计数器
+        if not hasattr(self, "_obs_save_counter"):
+            self._obs_save_counter = 0
+        # 每20个step保存一次obs_buf["policy"]
+        if self._obs_save_counter % 20 == 0:
+            policy_obs = self.obs_buf["policy"].cpu().numpy()
+            filename = f"obs_policy_step_{self._obs_save_counter}.txt"
+            np.savetxt(filename, policy_obs, fmt="%.6f")
+            print(f"Saved policy observation to {filename}")
+        self._obs_save_counter += 1
+
         # return observations, rewards, resets and extras
         return self.obs_buf, self.reward_buf, self.reset_terminated, self.reset_time_outs, self.extras

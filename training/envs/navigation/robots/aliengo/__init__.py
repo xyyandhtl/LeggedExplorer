@@ -11,7 +11,7 @@ gym.register(
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": env_cfg.AliengoRoverEnvCfg,
-        "best_model_path": f"{os.path.dirname(__file__)}/policies/best_agent2.pt",
+        "best_model_path": f"{os.path.dirname(__file__)}/policies/best_agent.pt",
         "get_agent_fn": get_agent,
     }
 )

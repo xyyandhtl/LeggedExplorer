@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import torch
-from isaaclab.managers import SceneEntityCfg
-from isaaclab.sensors import RayCaster
+# from isaaclab.managers import SceneEntityCfg
+# from isaaclab.sensors import RayCaster
 
 from .actions import NavigationAction
 
@@ -34,17 +34,17 @@ def distance_to_target_euclidean(env: ManagerBasedRLEnv, command_name: str):
     return distance.unsqueeze(-1)
 
 
-def height_scan_legged(env: ManagerBasedRLEnv, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
-    """Calculate the height scan of the rover.
-
-    This function uses a ray caster to generate a height scan of the rover's surroundings.
-    The height scan is normalized by the maximum range of the ray caster.
-    """
-    # extract the used quantities (to enable type-hinting)
-    sensor: RayCaster = env.scene.sensors[sensor_cfg.name]
-    # height scan: height = sensor_height - hit_point_z - 0.26878
-    # Note: 0.26878 is the distance between the sensor and the rover's base
-    return sensor.data.pos_w[:, 2].unsqueeze(1) - sensor.data.ray_hits_w[..., 2] - 0.26878
+# def height_scan_legged(env: ManagerBasedRLEnv, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
+#     """Calculate the height scan of the rover.
+#
+#     This function uses a ray caster to generate a height scan of the rover's surroundings.
+#     The height scan is normalized by the maximum range of the ray caster.
+#     """
+#     # extract the used quantities (to enable type-hinting)
+#     sensor: RayCaster = env.scene.sensors[sensor_cfg.name]
+#     # height scan: height = sensor_height - hit_point_z - 0.26878
+#     # Note: 0.26878 is the distance between the sensor and the rover's base
+#     return sensor.data.pos_w[:, 2].unsqueeze(1) - sensor.data.ray_hits_w[..., 2] - 0.26878
 
 
 def angle_diff(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
@@ -55,12 +55,10 @@ def angle_diff(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
     return heading_angle_diff.unsqueeze(-1)
 
 
-# def dummy_extra_input(env: ManagerBasedRLEnv):
-#     return torch.zeros(env.num_envs, 2, device=env.device)
-
 def low_level_actions(env: ManagerBasedRLEnv) -> torch.Tensor:
     """Low-level actions."""
     # extract the used quantities (to enable type-hinting)
-    action_term: NavigationAction = env.action_manager._terms['actions']
+    # action_term: NavigationAction = env.action_manager._terms['actions']
+    action_term: NavigationAction = env.action_manager.get_term('action')
 
     return action_term.low_level_actions.clone()
