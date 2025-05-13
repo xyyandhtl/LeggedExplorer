@@ -6,11 +6,13 @@ import numpy as np
 class LocalPlannerBase:
     def __init__(self, cfg):
         self.cfg = cfg
+        self.device = cfg.policy_device
         self.num_envs = cfg.num_envs
         self.update_dt = 1. / cfg.local_planner_freq
         print(f'local_planner update dt: {self.update_dt}')
-        self.sensor_data = { 'rgb': [],
-                             'depth': [], }
+        self.rgb_data = [],
+        self.depth_data = [],
+        self.scan_data = None,
         self.ego_state = {}
         self.goal_info = { 'goal_type': '',    # todo: 'blind', 'waypoint', 'path'
                            'goal_cmd': [],     # for blind goal, like just walking forward
@@ -54,13 +56,10 @@ class LocalPlannerBase:
         raise NotImplementedError("Subclasses must implement this method")
 
     def reset(self):
-        self.sensor_data = { 'rgb': [],
-                             'depth': [], }
+        self.rgb_data = [],
+        self.depth_data = [],
+        self.scan_data = None,
         self.ego_state = {}
-        self.goal_info = { 'goal_type': '',
-                           'goal_cmd': [],
-                           'goal_position': [],
-                           'goal_orientation': [], }
 
 
 class LocalPlannerIsaac(LocalPlannerBase):
@@ -72,15 +71,15 @@ class LocalPlannerIsaac(LocalPlannerBase):
 
     def update_sensor_data(self):
         if self.rgb_cameras:
-            self.sensor_data['rgb'] = []
+            self.rgb_data = []
             for i, camera in enumerate(self.rgb_cameras):
                 rgb = camera.get_rgb()
-                self.sensor_data['rgb'].append(rgb)
+                self.rgb_data.append(rgb)
         if self.depth_cameras:
-            self.sensor_data['depth'] = []
+            self.depth_data = []
             for i, camera in enumerate(self.depth_cameras):
                 depth = camera.get_depth()
-                self.sensor_data['depth'].append(depth)
+                self.depth_data.append(depth)
 
     def update_goal_info(self):
         # todo
@@ -160,8 +159,8 @@ class LocalPlannerROS2(LocalPlannerBase, Node):
         """
         Copy latest received images into self.sensor_data.
         """
-        self.sensor_data['rgb'] = [self.rgb_images.get(topic) for topic in self.rgb_cameras]
-        self.sensor_data['depth'] = [self.depth_images.get(topic) for topic in self.depth_cameras]
+        self.rgb_data = [self.rgb_images.get(topic) for topic in self.rgb_cameras]
+        self.depth_data = [self.depth_images.get(topic) for topic in self.depth_cameras]
 
     def infer_action(self):
         raise NotImplementedError("Subclasses must implement this method")

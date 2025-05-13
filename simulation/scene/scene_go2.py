@@ -61,7 +61,7 @@ class Go2SimCfg(InteractiveSceneCfg):
     print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
 
     # Go2 foot contact sensor
-    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Go2/.*_foot", history_length=3, track_air_time=True)
+    # contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Go2/.*_foot", history_length=3, track_air_time=True)
 
 @configclass
 class ActionsCfg:

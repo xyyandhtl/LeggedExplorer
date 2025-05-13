@@ -4,11 +4,19 @@
 *.mp4
 *.jit
 
+# Assets files
+*.usd
+materials/
+Materials/
+textures/
+
 # Ignore specific folders
 outputs/
 logs/
 log/
 install/
+debug/
+wandb/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

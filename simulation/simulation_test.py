@@ -49,6 +49,8 @@ def run_simulator(cfg):
         env_cfg = AliengoRSLEnvCfg()
         env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
         env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+        # env_cfg.scene.height_scanner = None
+        # env_cfg.observations.policy.height_scan = None
         sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
@@ -61,7 +63,33 @@ def run_simulator(cfg):
     agent_ctrl.init_base_vel_cmd(cfg.num_envs)
     print(f'[{cfg.robot_name} env_cfg policy]: {env_cfg.observations.policy}')
     print(f'[{cfg.robot_name} env_cfg actuator]: {env_cfg.actions}')
+
+    # ===============================================================================================
+    # Simulation environment
+    if cfg.env_name == "tunnel":
+        from simulation.env.hf_env import tunnel_terrain
+        env_cfg.scene.terrain = tunnel_terrain
+    elif cfg.env_name == "obstacle-dense":
+        from simulation.env.hf_env import dense_obstacle_terrain
+        env_cfg.scene.terrain = dense_obstacle_terrain
+    elif cfg.env_name == "omni":
+        # todo: remain bugs to fix
+        from simulation.env.omni_env import omni_terrain_cfg
+        env_cfg.scene.terrain = omni_terrain_cfg(cfg.scene_id)
+    elif cfg.env_name == "matterport3d":
+        from simulation.env.mp3d_env import mp3d_terrain_cfg
+        env_cfg.scene.terrain = mp3d_terrain_cfg(cfg.scene_id)
+    elif cfg.env_name == "carla":
+        from simulation.env.carla_env import carla_terrain_cfg
+        env_cfg.scene.terrain = carla_terrain_cfg()
+    else:
+        raise NotImplementedError(f'[{cfg.env_name}] env has not been implemented yet')
+
+    # ===============================================================================================
+    # Environment construct
     env = ManagerBasedRLEnv(env_cfg)
+    print("env.observation_manager.group_obs_term_dim", env.observation_manager.group_obs_term_dim)
+    print("env.observation_manager.active_terms", env.observation_manager.active_terms['policy'])
 
     # ===============================================================================================
     # locomotion policy setup
@@ -99,6 +127,12 @@ def run_simulator(cfg):
         lidar_annotators = sm.add_rtx_lidar()
 
     # ===============================================================================================
+    # COTCalculator setup
+    # from simulation.agent.util import COTCalculator
+    # robot = env.unwrapped.scene.envs[0].robot
+    # cot_calculator = COTCalculator(robot.data, env_cfg.sim.dt)
+
+    # ===============================================================================================
     # local planner setup
     local_planner = None
     if cfg.test_level > 0:
@@ -107,40 +141,15 @@ def run_simulator(cfg):
             local_planner = LocalPlannerDepth(cfg)
             assert cameras is not None, 'Camera not enabled'
             local_planner.set_depth_cameras(cameras)
+        elif cfg.local_planner == 'rl_roverlab':
+            from local_planner.policy.roverlab_rl import LocalPlannerRLRoverLab
+            local_planner = LocalPlannerRLRoverLab(cfg)
         else:
             raise NotImplementedError(f'Local planner {cfg.local_planner} not implemented')
 
         from local_planner.env_wrapper.planner_env_wrapper import LocalPlannerEnvWrapper
         env = LocalPlannerEnvWrapper(env)
         env.set_local_planner(local_planner)
-
-    # ===============================================================================================
-    # Simulation environment
-    if cfg.env_name == "tunnel":
-        # from simulation.env.hf_env import create_mixed_terrain_env
-        # create_mixed_terrain_env()  # obstacles dense
-        from simulation.env.hf_env import create_tunnel_env
-        create_tunnel_env()
-    elif cfg.env_name == "obstacle-dense":
-        # from simulation.env.hf_env import create_mixed_terrain_env
-        # create_mixed_terrain_env()  # obstacles dense
-        from simulation.env.mixed_env import create_mixed_terrain_env, create_mixed_terrain_env2
-        create_mixed_terrain_env2()
-    elif cfg.env_name == "obstacle-medium":
-        from simulation.env.hf_env import create_obstacle_medium_env
-        create_obstacle_medium_env()  # obstacles medium
-    elif cfg.env_name == "obstacle-sparse":
-        from simulation.env.hf_env import create_obstacle_sparse_env
-        create_obstacle_sparse_env()  # obstacles sparse
-    elif cfg.env_name == "omni":
-        from simulation.env.omni_env import create_omni_env
-        create_omni_env(cfg.scene_id)
-    elif cfg.env_name == "matterport3d":
-        from simulation.env.mp3d_env import create_matterport3d_env
-        create_matterport3d_env(cfg.scene_id)  # matterport3d
-    elif cfg.env_name == "carla":
-        from simulation.env.carla_env import create_carla_env
-        create_carla_env()
 
     # ===============================================================================================
     # Keyboard control
@@ -161,9 +170,9 @@ def run_simulator(cfg):
     # simulation loop
     sim_step_dt = float(env_cfg.sim.dt * env_cfg.decimation)
     obs, _ = env.reset()
-    obs_list = obs.cpu().numpy().tolist()[0]
-    obs_list = ["{:.3f}".format(v) for v in obs_list]
-    print(f'[init obs shape]: {obs.shape}: {obs_list}')
+    # obs_list = obs.cpu().numpy().tolist()[0]
+    # obs_list = ["{:.3f}".format(v) for v in obs_list]
+    print(f'[init obs shape]: {obs.shape}')
 
     if cfg.policy == "wmp_loco":
         # init world_model data

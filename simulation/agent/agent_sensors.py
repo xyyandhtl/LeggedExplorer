@@ -83,8 +83,25 @@ class SensorManager:
             cameras.append(camera)
         return cameras
 
+    # not in use, get lidar data from env policy observations
+    def add_lidar(self, freq):
+        from isaaclab.sensors.ray_caster import RayCaster, RayCasterCfg, patterns
+        ray_casters = []
+        for env_idx in range(self.num_envs):
+            ray_caster_cfg = RayCasterCfg(
+                prim_path=f"/World/envs/env_{env_idx}/{self.robot_name}/{self.base_name}",
+                mesh_prim_paths=["/World/ground"],
+                pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=(2.0, 2.0)),
+                attach_yaw_only=True,
+                debug_vis=False,
+            )
+            ray_caster = RayCaster(cfg=ray_caster_cfg)
+            print('init ray_caster.data.ray_hits_w', ray_caster.data.ray_hits_w)
+            ray_casters.append(ray_caster)
+        return ray_casters
+
 def create_view_camera(pos, rot):
-    from omni.isaac.core.utils.prims import create_prim, set_prim_property
+    from isaacsim.core.utils.prims import create_prim, set_prim_property
     create_prim("/World/CustomCamera", "Camera",
                 translation=np.array(pos),
                 orientation=rot_utils.euler_angles_to_quats(np.array(rot), degrees=True))

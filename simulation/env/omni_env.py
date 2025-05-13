@@ -1,8 +1,23 @@
 from omni.isaac.nucleus import get_assets_root_path
 from omni.isaac.core.utils.prims import define_prim, get_prim_at_path
+from isaaclab import sim as sim_utils
+from isaaclab.assets import AssetBaseCfg
 
 from .common import add_semantic_label
 
+assets_root_path = get_assets_root_path()
+print(f'omniverse assets_root_path {assets_root_path}')
+
+def omni_terrain_cfg(scene_id):
+    omni_terrain = AssetBaseCfg(
+        prim_path=f"/World/Scene",
+        spawn=sim_utils.UsdFileCfg(
+            visible=True,
+            usd_path=assets_root_path+f"/Isaac/Environments/{scene_id}.usd",
+        ),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
+    )
+    return omni_terrain
 
 def create_omni_env(scene_id):
     add_semantic_label()

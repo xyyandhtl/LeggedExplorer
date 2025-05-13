@@ -1,7 +1,7 @@
 defaults:
   - _self_
 
-test_level: 0     # 0-'locomotion_level' 1-'local_planner_level' 2-'system_level'
+test_level: 1     # 0-'locomotion_level' 1-'local_planner_level' 2-'system_level'
 robot_name: aliengo    # a1 go2 aliengo
 num_envs: 1
 
@@ -10,7 +10,7 @@ policy: him_loco
 policy_device: cuda:0
 
 # planner config
-local_planner: depth_planner
+local_planner: rl_roverlab    # rl_roverlab depth_planner
 data_access_method: direct    # 'direct' 'ros2'
 local_planner_freq: 20.0
 goal_type: blind              # dont know world pose: 'blind' todo: 'pose'
@@ -22,7 +22,7 @@ walk_while_yaw: True
 
 # sim config
 camera_follow: True
-init_pos: [-16, 0, 0.5]  # -26 -31 -16
+init_pos: [-31, 0, 0.5]  # -26 -31 -16
 #init_rot: [0.707, 0.0, 0.0, -0.707]
 init_rot: [1.0, 0.0, 0.0, 0.0]
 view_pos: [0, 0, 30.0]
@@ -43,7 +43,7 @@ enable_camera: True
 
 # environment config
 env_name: tunnel
-#env_name: obstacle-medium
+#env_name: obstacle-dense
 #env_name: omni
 #env_name: carla
 #env_name: matterport3d
