@@ -90,9 +90,10 @@ class NavigationAction(ActionTerm):
         # Store low level navigation actions
         self._raw_navigation_velocity_actions[:] = actions
 
-        self._processed_navigation_velocity_actions[:, 0] = actions[:, 0] * 2.0  # todo: not apply scale here
-        self._processed_navigation_velocity_actions[:, 2] = actions[:, 1] * 0.5
-        # self._processed_navigation_velocity_actions[:] = actions.clone().view(self.num_envs, 3)
+        # self._processed_navigation_velocity_actions[:, 0] = actions[:, 0] * 2.0  # todo: not apply scale here
+        # self._processed_navigation_velocity_actions[:, 2] = actions[:, 1] * 0.5
+        self._processed_navigation_velocity_actions[:, 0] = actions[:, 0]
+        self._processed_navigation_velocity_actions[:, 2] = actions[:, 1]
 
     def apply_actions(self):
         """Apply low-level actions for the simulator to the physics engine. This functions is called with the

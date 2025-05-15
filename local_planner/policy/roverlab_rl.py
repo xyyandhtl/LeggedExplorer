@@ -14,11 +14,11 @@ from .base import LocalPlannerIsaac
 
 
 experiment_cfg_agent = {'rollouts': 60, 'learning_epochs': 4, 'mini_batches': 60, 'discount_factor': 0.99, 'lambda': 0.95, 'learning_rate': 0.0001, 'random_timesteps': 0, 'learning_starts': 0, 'grad_norm_clip': 0.5, 'ratio_clip': 0.2, 'value_clip': 0.2, 'clip_predicted_values': True, 'entropy_loss_scale': 0.0, 'value_loss_scale': 1.0, 'kl_threshold': 0.008, 'experiment': {'directory': '/home/lenovo/Opensources/RLRoverLab/examples/03_inference_pretrained/logs/skrl/rover', 'experiment_name': 'May07_09-55-23_PPO', 'write_interval': 40, 'checkpoint_interval': 400, 'wandb': True}}
-agent_policy_path = str(Path(__file__).resolve().parent.parent / 'ckpts/roverlab/best_agent2.pt')
+agent_policy_path = str(Path(__file__).resolve().parent.parent / 'ckpts/roverlab/best_agent.pt')
 
 
 def get_ppo_agent(device):
-    observation_space = Box(low=-math.inf, high=math.inf, shape=(10206,))
+    observation_space = Box(low=-math.inf, high=math.inf, shape=(966,))
     action_space = Box(low=-1.0, high=1.0, shape=(2,))
 
     # Define memory size
@@ -27,7 +27,7 @@ def get_ppo_agent(device):
     # Get the models
     # models = get_models("PPO", env, observation_space, action_space, conv)
     models = {}
-    encoder_input_size = 10201
+    encoder_input_size = 961
 
     mlp_input_size = 5
 

@@ -10,7 +10,7 @@ print(f'omniverse assets_root_path {assets_root_path}')
 
 def omni_terrain_cfg(scene_id):
     omni_terrain = AssetBaseCfg(
-        prim_path=f"/World/Scene",
+        prim_path=f"/World/Terrain",
         spawn=sim_utils.UsdFileCfg(
             visible=True,
             usd_path=assets_root_path+f"/Isaac/Environments/{scene_id}.usd",

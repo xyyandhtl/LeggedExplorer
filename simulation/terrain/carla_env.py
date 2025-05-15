@@ -8,10 +8,10 @@ from isaaclab.assets import AssetBaseCfg
 
 def carla_terrain_cfg():
     carla_terrain = AssetBaseCfg(
-        prim_path=f"/World/Scene",
+        prim_path=f"/World/Terrain",
         spawn=sim_utils.UsdFileCfg(
             visible=True,
-            usd_path=f"{os.getenv('USER_PATH_TO_USD')}/carla_export/carla.usd",
+            usd_path=f"{os.getenv('USER_PATH_TO_USD')}/terrain/carla_export/carla.usd",
         ),
         init_state=AssetBaseCfg.InitialStateCfg(pos=(-200.0, -125.0, 0.0)),
     )

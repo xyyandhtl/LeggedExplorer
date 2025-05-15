@@ -25,11 +25,11 @@ def distance_to_target_reward(env: ManagerBasedRLEnv, command_name: str) -> torc
     target = env.command_manager.get_command(command_name)
     target_position = target[:, :2]
 
-    # Calculating the distance and the reward
-    distance = torch.norm(target_position, p=2, dim=-1)
+    # Calculating the distance and the reward, closer than 1m clamp to 1
+    scaled_distance = torch.clamp(torch.norm(target_position, p=2, dim=-1), 1.0) * 0.1
 
     # Return the reward, normalized by the maximum episode length
-    return (1.0 / (1.0 + (0.11 * distance * distance))) / env.max_episode_length
+    return 1.0 / (scaled_distance * scaled_distance) / env.max_episode_length
 
 
 def reached_target(env: ManagerBasedRLEnv, command_name: str, threshold: float) -> torch.Tensor:

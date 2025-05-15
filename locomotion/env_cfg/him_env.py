@@ -20,7 +20,7 @@ class HIMLocoEnvWrapper(RslRlVecEnvWrapper):
         if self.env_contains_height_scan:
             idx = self.env.observation_manager.active_terms['policy'].index('height_scan')
             # self.height_scan_dim = self.env.observation_manager.group_obs_term_dim['policy'][idx][0]
-            self.height_scan_dim = 10204
+            self.height_scan_dim = 961 + 3
             self.height_scan_buf = torch.zeros((self.env.num_envs, self.height_scan_dim), device=self.env.device)
 
     def reset(self):

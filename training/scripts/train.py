@@ -3,6 +3,7 @@ import math
 import os
 import random
 import sys
+import numpy as np
 from datetime import datetime
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
@@ -16,8 +17,8 @@ parser.add_argument("--video", action="store_true", default=False, help="Record 
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
-# parser.add_argument("--task", type=str, default="AliengoLeggedEnv-v0", help="Name of the task.")
-parser.add_argument("--task", type=str, default="AAURoverEnv-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="AliengoLeggedEnv-v0", help="Name of the task.")
+# parser.add_argument("--task", type=str, default="AAURoverEnv-v0", help="Name of the task.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
 parser.add_argument("--agent", type=str, default="PPO", help="Name of the agent.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint to resume training.")
@@ -50,6 +51,8 @@ carb_settings.set_int(
     "rtx/descriptorSets",
     8192,
 )
+# carb.settings.get_settings().set_bool("/physics/useGpuDynamics", False)
+# print("/physics/useGpuDynamics", carb_settings.get_int("/physics/useGpuDynamics"))
 from isaaclab.envs import ManagerBasedRLEnv  # noqa: E402
 from isaaclab.utils.dict import print_dict  # noqa: E402
 from isaaclab.utils.io import dump_pickle, dump_yaml  # noqa: E402
@@ -155,7 +158,10 @@ def train():
     # num_actions = 2
     # num_obs = env.unwrapped.observation_manager.group_obs_dim["policy"][0] + num_actions
     observation_space = gym.spaces.Box(low=-math.inf, high=math.inf, shape=(num_obs,))
-    action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
+    low = np.array([-2.0, -0.5], dtype=np.float32)
+    high = np.array([2.0, 0.5], dtype=np.float32)
+    action_space = gym.spaces.Box(low=low, high=high, shape=(num_actions,))
+    # action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
     print(f'Observation space: {observation_space.shape}')
     print(f'Action space: {action_space.shape}')
     print(f'num envs: {env.num_envs}')

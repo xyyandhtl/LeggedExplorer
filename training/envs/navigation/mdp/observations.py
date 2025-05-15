@@ -59,6 +59,6 @@ def low_level_actions(env: ManagerBasedRLEnv) -> torch.Tensor:
     """Low-level actions."""
     # extract the used quantities (to enable type-hinting)
     # action_term: NavigationAction = env.action_manager._terms['actions']
-    action_term: NavigationAction = env.action_manager.get_term('action')
+    action_term: NavigationAction = env.action_manager.get_term('actions')
 
     return action_term.low_level_actions.clone()

@@ -24,7 +24,7 @@ class LocalPlannerEnvWrapper:
         if self.env.env_contains_height_scan:
             self.planner.scan_data = self.env.height_scan_buf
         cur_cmd_vel = self.planner.get_current_cmd_vel()
-        print(f'cur_cmd_vel: {cur_cmd_vel}')
+        # print(f'planner cur_cmd_vel: {cur_cmd_vel}')
         obs, reward, done, info = self.env.step(action)
         if self.env.obs_history is not None:
             # print(f'obs_history shape {self.env.obs_history.shape}, obs shape {obs.shape}')

@@ -70,21 +70,24 @@ def run_simulator(cfg):
     # ===============================================================================================
     # Simulation environment
     if cfg.env_name == "tunnel":
-        from simulation.env.hf_env import tunnel_terrain
+        from simulation.terrain.hf_env import tunnel_terrain
         env_cfg.scene.terrain = tunnel_terrain
     elif cfg.env_name == "obstacle-dense":
-        from simulation.env.hf_env import dense_obstacle_terrain
+        from simulation.terrain.hf_env import dense_obstacle_terrain
         env_cfg.scene.terrain = dense_obstacle_terrain
     elif cfg.env_name == "omni":
         # todo: remain bugs to fix
-        from simulation.env.omni_env import omni_terrain_cfg
+        from simulation.terrain.omni_env import omni_terrain_cfg
         env_cfg.scene.terrain = omni_terrain_cfg(cfg.scene_id)
     elif cfg.env_name == "matterport3d":
-        from simulation.env.mp3d_env import mp3d_terrain_cfg
+        from simulation.terrain.mp3d_env import mp3d_terrain_cfg
         env_cfg.scene.terrain = mp3d_terrain_cfg(cfg.scene_id)
     elif cfg.env_name == "carla":
-        from simulation.env.carla_env import carla_terrain_cfg
+        from simulation.terrain.carla_env import carla_terrain_cfg
         env_cfg.scene.terrain = carla_terrain_cfg()
+    # elif cfg.env_name == "mars":  # todo: bugs to fix
+    #     from simulation.terrain.mars_terrains import mars_terrains_cfg
+    #     env_cfg.scene.terrain = mars_terrains_cfg()
     else:
         raise NotImplementedError(f'[{cfg.env_name}] env has not been implemented yet')
 

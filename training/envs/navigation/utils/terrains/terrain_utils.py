@@ -21,7 +21,7 @@ directory_terrain_utils = os.path.dirname(os.path.abspath(__file__))
 # )
 
 
-class HeightmapManager():
+class HeightmapManager:
 
     def __init__(self, resolution_in_m, vertices, faces):
         self.resolution_in_m = resolution_in_m
@@ -97,14 +97,14 @@ class HeightmapManager():
         return self.min_x, self.min_y
 
 
-class TerrainManager():
+class TerrainManager:
 
     def __init__(self, num_envs: int, device: str):
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
-        terrain_path = os.path.join(self.dir_path, "../terrain_data/map.ply")
-        rock_mesh_path = os.path.join(self.dir_path, "../terrain_data/big_stones.ply")
-        terrain_path = "/World/terrain/hidden_terrain/terrain"
-        rock_mesh_path = "/World/terrain/obstacles/obstacles"
+        terrain_path = "/World/Ground"
+        rock_mesh_path = "/World/Terrain"
+        # terrain_path = "/World/terrain/hidden_terrain/terrain"
+        # rock_mesh_path = "/World/terrain/obstacles/obstacles"
 
         self.meshes = [terrain_path, rock_mesh_path]
 
