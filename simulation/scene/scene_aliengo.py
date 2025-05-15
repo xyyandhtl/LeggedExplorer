@@ -62,9 +62,9 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
     actuators={
         "base_legs": DCMotorCfg(
             joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
-            effort_limit=33.5,          # todo
-            saturation_effort=33.5,     # todo
-            velocity_limit=21.0,        # todo
+            effort_limit=35,    # refer to Aliengo urdf
+            saturation_effort=35,
+            velocity_limit=13.0,
             stiffness=40.0,
             damping=2.0,
             friction=0.0,
