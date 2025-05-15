@@ -136,6 +136,7 @@ def add_material_to_stage_from_mdl():
 
 def get_triangles_and_vertices_from_prim(prim_path):
     """ Get triangles and vertices from prim """
+    print(f'get_triangles_and_vertices_from_prim from prim {prim_path}')
     stage: Usd.Stage = get_current_stage()
     mesh_prim = stage.GetPrimAtPath(prim_path)
 

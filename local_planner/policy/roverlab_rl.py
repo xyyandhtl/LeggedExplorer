@@ -14,11 +14,11 @@ from .base import LocalPlannerIsaac
 
 
 experiment_cfg_agent = {'rollouts': 60, 'learning_epochs': 4, 'mini_batches': 60, 'discount_factor': 0.99, 'lambda': 0.95, 'learning_rate': 0.0001, 'random_timesteps': 0, 'learning_starts': 0, 'grad_norm_clip': 0.5, 'ratio_clip': 0.2, 'value_clip': 0.2, 'clip_predicted_values': True, 'entropy_loss_scale': 0.0, 'value_loss_scale': 1.0, 'kl_threshold': 0.008, 'experiment': {'directory': '/home/lenovo/Opensources/RLRoverLab/examples/03_inference_pretrained/logs/skrl/rover', 'experiment_name': 'May07_09-55-23_PPO', 'write_interval': 40, 'checkpoint_interval': 400, 'wandb': True}}
-agent_policy_path = str(Path(__file__).resolve().parent.parent / 'ckpts/roverlab/best_agent2.pt')
+agent_policy_path = str(Path(__file__).resolve().parent.parent / 'ckpts/roverlab/best_agent.pt')
 
 
 def get_ppo_agent(device):
-    observation_space = Box(low=-math.inf, high=math.inf, shape=(10206,))
+    observation_space = Box(low=-math.inf, high=math.inf, shape=(966,))
     action_space = Box(low=-1.0, high=1.0, shape=(2,))
 
     # Define memory size
@@ -27,7 +27,7 @@ def get_ppo_agent(device):
     # Get the models
     # models = get_models("PPO", env, observation_space, action_space, conv)
     models = {}
-    encoder_input_size = 10201
+    encoder_input_size = 961
 
     mlp_input_size = 5
 
@@ -90,7 +90,10 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
 
     def infer_action(self):
         input = torch.cat([self.env_last_action, self.scan_data], dim=1)
-        input = torch.nan_to_num(input, nan=0.0, posinf=0.0, neginf=0.0)
+        # nan: can't raycast scan dot, regard obstacle
+        # posinf: deep holes, regard flat ground considering locomotion can handle
+        # neginf: inf high obstacle, theoretically should not contain
+        input = torch.nan_to_num(input, nan=-1.0, posinf=0.0, neginf=-1.0)
         print(f'last_action/distance/heading/diff {input[:, 0:5]}')
         if not self.initialized:
             self.initialized = True
@@ -109,13 +112,13 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
             outputs = self.agent.act(input, timestep=0, timesteps=0)
             # print(f'planner outputs {outputs}')
             # actions = outputs[-1].get("mean_actions", outputs[0])
-            actions = outputs[0] - 0.0135
+            actions = outputs[0]    # - 0.0135
             # actions[:, 1] = actions[:, 1] * 0.5
             # print(f'planner actions {actions}')
             self.env_last_action = actions
         self.commands[:, [0, 2]] = actions.cpu().numpy()
-        self.commands[:, 0] *= 2.0
-        self.commands[:, 2] *= 0.25
+        # self.commands[:, 0] *= 2.0
+        # self.commands[:, 2] *= 0.25
 
 
 

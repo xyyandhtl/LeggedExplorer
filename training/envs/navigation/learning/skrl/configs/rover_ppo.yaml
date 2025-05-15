@@ -54,8 +54,8 @@ agent:
   experiment:
     directory: "legged"
     experiment_name: ""
-    write_interval: 40
-    checkpoint_interval: 400
+    write_interval: 30
+    checkpoint_interval: 600
     wandb: False             # whether to use Weights & Biases
 
 trainer:

@@ -105,8 +105,9 @@ def tunnel_obstacles_terrain(difficulty: float, cfg) -> np.ndarray:
     obs_x_range = np.arange(0, width_pixels, 4)
     obs_y_range = np.arange(3, length_pixels - 3, 4)
 
+    ground_height = int(cfg.ground_height / cfg.vertical_scale)
     # create a terrain with a flat platform at the center
-    hf_raw = np.zeros((width_pixels, length_pixels))
+    hf_raw = ground_height * np.ones((width_pixels, length_pixels))
     obs_dist = cfg.obstacles_distance
     stop_sampling = False
     # generate the obstacles
@@ -152,7 +153,7 @@ def tunnel_obstacles_terrain(difficulty: float, cfg) -> np.ndarray:
     x2 = (width_pixels + platform_width) // 2
     y1 = (length_pixels - platform_width) // 2
     y2 = (length_pixels + platform_width) // 2
-    hf_raw[x1:x2, y1:y2] = 0
+    hf_raw[x1:x2, y1:y2] = int(cfg.ground_height / cfg.vertical_scale)
     # round off the heights to the nearest vertical step
     return np.rint(hf_raw).astype(np.int16)
 
@@ -199,3 +200,4 @@ class HfTunnelTerrainCfg(HfTerrainBaseCfg):
     """The width of the square platform at the center of the terrain. Defaults to 1.0."""
     avoid_positions: list[list[float, float]] = []
     wall_height: float = 1.0
+    ground_height: float = -0.01

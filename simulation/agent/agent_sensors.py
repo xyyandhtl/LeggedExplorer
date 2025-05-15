@@ -2,8 +2,8 @@ import omni
 import numpy as np
 from pxr import Gf
 import omni.replicator.core as rep
-from omni.isaac.sensor import Camera
-import omni.isaac.core.utils.numpy.rotations as rot_utils
+from isaacsim.sensors.camera import Camera
+import isaacsim.core.utils.numpy.rotations as rot_utils
 
 
 class SensorManager:

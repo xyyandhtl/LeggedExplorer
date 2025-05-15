@@ -43,7 +43,7 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.55),
+        pos=(0.0, 0.0, 0.45),
         joint_pos={
             # ".*L_hip_joint": 0.1,
             # ".*R_hip_joint": -0.1,
@@ -107,11 +107,11 @@ class AliengoSimCfg(InteractiveSceneCfg):
 
     height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Aliengo/trunk",
-        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.3]),
+        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
         attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[5.0, 5.0]),
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[3.0, 3.0]),
         debug_vis=True,
-        mesh_prim_paths=["/World/Scene"],
+        mesh_prim_paths=["/World/Terrain"],
         max_distance=100.0,
     )
 
@@ -164,9 +164,9 @@ class ObservationsCfg:
 
         height_scan = ObsTerm(func=mdp.height_scan, scale=1,
                               params={"sensor_cfg": SceneEntityCfg("height_scanner"),
-                                      "offset": 0.26878},
-                                      # "offset": 0.5},
-                              # clip=(-1.0, 1.0),
+                                      # "offset": 0.26878},
+                                      "offset": 0.5 + 0.3},   # estimated robot base height
+                              clip=(-1.0, 1.0),
                               )
 
         def __post_init__(self) -> None:
@@ -189,20 +189,15 @@ class CommandsCfg:
         ),
     )
 
+    # need to be comment when not using 'mars' or 'tunnel'.
+    # todo: add flat_patch_sampling for different terrains
     target_pose = mdp.TerrainBasedPose2dCommandCfg(
         asset_name="legged_robot",
         resampling_time_range=(50.0, 50.0),
         simple_heading=False,
         debug_vis=True,
-        # ranges=mdp.TerrainBasedPose2dCommandCfg.Ranges(
-        #     heading=(-math.pi, math.pi),
-        #     # pos_x=(5, 15),
-        # ),
-        ranges=mdp.UniformPose2dCommandCfg.Ranges(
-            heading=(-math.pi, math.pi),
-            pos_x=(5, 15),
-            pos_y=(-5, 5),
-        ),
+        ranges=mdp.TerrainBasedPose2dCommandCfg.Ranges(
+            heading=(-math.pi, math.pi)),
     )
     target_pose.goal_pose_visualizer_cfg.markers["arrow"].scale = (1.0, 1.0, 4.0)
 

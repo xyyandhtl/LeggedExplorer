@@ -22,20 +22,18 @@ from isaaclab.terrains import TerrainImporter, TerrainImporterCfg  # noqa: F401
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import UniformNoiseCfg  # noqa: F401
 
-##
-# Scene Description
-##
-import training
+from simulation.terrain.hf_env import TunnelTerrainSceneCfg
 import training.envs.navigation.mdp as mdp
-from training.assets.terrains.debug.debug_terrains import DebugTerrainSceneCfg  # noqa: F401
-from training.assets.terrains.mars import MarsTerrainSceneCfg  # noqa: F401
-from training.envs.navigation.utils.terrains.commands_cfg import TerrainBasedPositionCommandCfg  # noqa: F401
+# from simulation.terrain.mars_terrains import MarsTerrainSceneCfg
+# from training.assets.terrains.debug.debug_terrains import DebugTerrainSceneCfg  # noqa: F401
+# from training.assets.terrains.mars import MarsTerrainSceneCfg  # noqa: F401
 # from training.envs.navigation.utils.terrains.terrain_importer import RoverTerrainImporter  # noqa: F401
+# from training.envs.navigation.utils.terrains.commands_cfg import TerrainBasedPositionCommandCfg
 from training.envs.navigation.utils.terrains.terrain_importer import TerrainBasedPositionCommand  # noqa: F401
 
 
 @configclass
-class LeggedSceneCfg(MarsTerrainSceneCfg):
+class LeggedSceneCfg(TunnelTerrainSceneCfg):
     """
     Legged Scene Configuration
 
@@ -44,41 +42,21 @@ class LeggedSceneCfg(MarsTerrainSceneCfg):
         LeggedSceneCfg(MarsTerrainSceneCfg) -> LeggedSceneCfg(DebugTerrainSceneCfg)
 
     """
-
-    dome_light = AssetBaseCfg(
-        prim_path="/World/DomeLight",
-        spawn=sim_utils.DomeLightCfg(
-            color_temperature=4500.0,
-            intensity=10000,
-            enable_color_temperature=True,
-            texture_file=os.path.join(
-                os.path.dirname(os.path.abspath(training.__path__[0])),
-                "training",
-                "assets",
-                "textures",
-                "background.png",
-            ),
-            texture_format="latlong",
+    sky_light = AssetBaseCfg(
+        prim_path="/World/skyLight",
+        spawn=sim_utils.DomeLightCfg(color=(0.2, 0.2, 0.3), intensity=2000.0),
+    )
+    cylinder_light = AssetBaseCfg(
+        prim_path="/World/cylinderLight",
+        spawn=sim_utils.CylinderLightCfg(
+            length=100, radius=0.3, treat_as_line=False, intensity=5000.0
         ),
     )
-
-    sphere_light = AssetBaseCfg(
-        prim_path="/World/SphereLight",
-        spawn=sim_utils.SphereLightCfg(
-            intensity=30000.0, radius=50, color_temperature=5500, enable_color_temperature=True
-        ),
-        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, -180.0, 80.0)),
-    )
+    cylinder_light.init_state.pos = (0, 0, 5.0)
 
     robot: ArticulationCfg = MISSING
-    # AAU_ROVER_SIMPLE_CFG.replace(
-    #     prim_path="{ENV_REGEX_NS}/Robot")
 
-    contact_sensor: ContactSensorCfg =MISSING
-
-    # contact_sensor = None
-    # contact_sensor = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*_foot",
-    #                                   history_length=3, track_air_time=True)
+    contact_sensor: ContactSensorCfg = MISSING
 
     height_scanner: RayCasterCfg = MISSING
 
@@ -88,50 +66,56 @@ class ActionsCfg:
     """Action"""
 
     # We define the action space for the legged
-    actions: ActionTerm = MISSING
+    actions: ActionTerm = mdp.NavigationActionCfg(
+            asset_name="robot",
+            low_level_decimation=4,
+            low_level_action=mdp.JointPositionActionCfg(
+                asset_name="robot", joint_names=[".*"], scale=0.5  # , use_default_offset=True
+            ),
+        )
 
 
 @configclass
 class RewardsCfg:
     distance_to_target = RewTerm(
         func=mdp.distance_to_target_reward,
-        weight=5.0,
+        weight=10.0,
         params={"command_name": "target_pose"},
     )
     reached_target = RewTerm(
         func=mdp.reached_target,
-        weight=5.0,
-        params={"command_name": "target_pose", "threshold": 0.18},
+        weight=10.0,
+        params={"command_name": "target_pose", "threshold": 0.2},
     )
     oscillation = RewTerm(
         func=mdp.oscillation_penalty,
-        weight=-0.05,
+        weight=-0.1,
         params={},
     )
     angle_to_target = RewTerm(
         func=mdp.angle_to_target_penalty,
-        weight=-1.5,
+        weight=-1.0,
         params={"command_name": "target_pose"},
     )
     heading_soft_contraint = RewTerm(
         func=mdp.heading_soft_contraint,
-        weight=-0.5,
+        weight=-2.0,
         params={"asset_cfg": SceneEntityCfg(name="robot")},
     )
-    collision = RewTerm(
-        func=mdp.collision_penalty,
-        weight=-3.0,
-        params={"sensor_cfg": SceneEntityCfg(
-            "contact_sensor"), "threshold": 1.0},
-    )
-    far_from_target = RewTerm(
-        func=mdp.far_from_target_reward,
-        weight=-2.0,
-        params={"command_name": "target_pose", "threshold": 11.0},
-    )
+    # collision = RewTerm(
+    #     func=mdp.collision_penalty,
+    #     weight=-0.5,    #-3.0,
+    #     params={"sensor_cfg": SceneEntityCfg(
+    #         "contact_sensor"), "threshold": 1.0},
+    # )
+    # far_from_target = RewTerm(
+    #     func=mdp.far_from_target_reward,
+    #     weight=-2.0,
+    #     params={"command_name": "target_pose", "threshold": 11.0},
+    # )
     angle_diff = RewTerm(
         func=mdp.angle_to_goal_reward,
-        weight=5.0,
+        weight=50.0,
         params={"command_name": "target_pose"},
     )
 
@@ -147,13 +131,14 @@ class TerminationsCfg:
     )
     far_from_target = DoneTerm(
         func=mdp.far_from_target,
-        params={"command_name": "target_pose", "threshold": 11.0},
+        params={"command_name": "target_pose", "threshold": 50.0},
     )
-    collision = DoneTerm(
-        func=mdp.collision_with_obstacles,
-        params={"sensor_cfg": SceneEntityCfg(
-            "contact_sensor"), "threshold": 1.0},
-    )
+    # todo: think if add collision DoneTerm?
+    # collision = DoneTerm(
+    #     func=mdp.collision_with_obstacles,
+    #     params={"sensor_cfg": SceneEntityCfg(
+    #         "contact_sensor"), "threshold": 1.0},
+    # )
 
 
 @configclass
@@ -167,10 +152,24 @@ class EventCfg:
     #     },
     # )
     reset_state = EventTerm(
-        func=mdp.reset_root_state_legged,   # todo: check if valid for legged robot
+        func=mdp.reset_root_state_from_terrain,   # todo: check if valid for legged robot
         mode="reset",
         params={
-            "asset_cfg": SceneEntityCfg(name="robot"),
+            "pose_range": {
+                # "x": (-1.5, 1.5),
+                # "y": (-1.5, 1.5),
+                # "z": (0.45, 0.45),
+                "roll": (-0.0, 0.0),
+                "pitch": (-0.0, 0.0),
+                "yaw": (-3.14, 3.14)},
+            "velocity_range": {
+                "x": (-0.0, 0.0),
+                "y": (-0.0, 0.0),
+                "z": (-0.0, 0.0),
+                "roll": (-0.0, 0.0),
+                "pitch": (-0.0, 0.0),
+                "yaw": (-0.0, 0.0),
+            },
         },
     )
 
@@ -187,7 +186,7 @@ class LeggedEnvCfg(ManagerBasedRLEnvCfg):
 
     # Create scene
     scene: LeggedSceneCfg = LeggedSceneCfg(
-        num_envs=1, env_spacing=4.0, replicate_physics=False)
+        num_envs=64, env_spacing=4.0, replicate_physics=False)
 
     # Setup PhysX Settings
     sim: SimCfg = SimCfg(
@@ -222,14 +221,46 @@ class LeggedEnvCfg(ManagerBasedRLEnvCfg):
     # curriculum: CurriculumCfg = CurriculumCfg()
 
     def __post_init__(self):
-        self.sim.dt = 0.005     # 1 / 30.0
-        self.decimation = 20     # 6
+        self.sim.dt = 1 / 30.0   # 1 / 30.0 0.005
+        self.decimation = 6     # 6
         self.episode_length_s = 150  # 150 seconds
-        self.viewer.eye = (38, 33, 2)
-        self.viewer.lookat = (33, 33, 0)
+        # self.viewer.eye = (38, 33, 2)
+        # self.viewer.lookat = (33, 33, 0)
+        # self.viewer.eye = (-16, 0, 2)
+        # self.viewer.lookat = (-10, 0, 0)
+        self.viewer.eye = (0, 0, 5)
+        self.viewer.lookat = (0, 0, 0)
 
         # update sensor periods
         if self.scene.height_scanner is not None:
             self.scene.height_scanner.update_period = self.sim.dt * self.decimation
         if self.scene.contact_sensor is not None:
             self.scene.contact_sensor.update_period = self.sim.dt * self.decimation
+
+
+# todo: for flexible use
+def create_terrain_based_cfg(terrain_type: str = "mars", scene_id=None):
+    env_cfg = LeggedEnvCfg()
+    if terrain_type == "mars":
+        from simulation.terrain.mars_terrains import hidden_terrain, terrain, obstacles
+        env_cfg.scene.terrain = terrain
+        env_cfg.scene.hidden_terrain = hidden_terrain
+        env_cfg.scene.obstacles = obstacles
+        from simulation.terrain.hf_env import tunnel_terrain
+        env_cfg.scene.terrain = tunnel_terrain
+    elif terrain_type == "obstacle-dense":
+        from simulation.terrain.hf_env import dense_obstacle_terrain
+        env_cfg.scene.terrain = dense_obstacle_terrain
+    elif terrain_type == "omni":
+        # todo: remain bugs to fix
+        from simulation.terrain.omni_env import omni_terrain_cfg
+        env_cfg.scene.terrain = omni_terrain_cfg(scene_id)
+    elif terrain_type == "matterport3d":
+        from simulation.terrain.mp3d_env import mp3d_terrain_cfg
+        env_cfg.scene.terrain = mp3d_terrain_cfg(scene_id)
+    elif terrain_type == "carla":
+        from simulation.terrain.carla_env import carla_terrain_cfg
+        env_cfg.scene.terrain = carla_terrain_cfg()
+    else:
+        raise NotImplementedError(f'[{terrain_type}] terrain env has not been implemented yet')
+    return env_cfg

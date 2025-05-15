@@ -8,11 +8,22 @@ from isaaclab.utils.configclass import configclass
 
 from training.envs.navigation.utils.terrains.terrain_importer import RoverTerrainImporter
 
-# base_path = os.path.dirname(os.path.abspath(__file__))
-# ground_terrain_path = os.path.join(base_path, "terrain1", "terrain_only.usd")
-# obstacles_path = os.path.join(base_path, "terrain1", "rocks_merged.usd")
-# hidden_terrain_path = os.path.join(base_path, "terrain1", "terrain_merged.usd")
+base_path = f"{os.getenv('USER_PATH_TO_USD')}/terrain"
+print(f'terrain base_path {base_path}')
+ground_terrain_path = os.path.join(base_path, "mars", "terrain_only.usd")
+obstacles_path = os.path.join(base_path, "mars", "rocks_merged.usd")
+hidden_terrain_path = os.path.join(base_path, "mars", "terrain_merged.usd")
 
+
+def mars_terrains_cfg():
+    terrain = TerrainImporterCfg(
+        class_type=RoverTerrainImporter,
+        prim_path="/World/Terrain",
+        terrain_type="usd",
+        collision_group=-1,
+        usd_path=ground_terrain_path,
+    )
+    return terrain
 
 @configclass
 class MarsTerrainSceneCfg(InteractiveSceneCfg):
@@ -25,11 +36,7 @@ class MarsTerrainSceneCfg(InteractiveSceneCfg):
         prim_path="/World/terrain/hidden_terrain",
         spawn=sim_utils.UsdFileCfg(
             visible=False,
-            usd_path=os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "terrain1",
-                "terrain_merged.usd",
-            ),
+            usd_path=hidden_terrain_path,
         ),
         init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
@@ -40,11 +47,7 @@ class MarsTerrainSceneCfg(InteractiveSceneCfg):
         prim_path="/World/terrain",
         terrain_type="usd",
         collision_group=-1,
-        usd_path=os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "terrain1",
-            "terrain_only.usd",
-        ),
+        usd_path=ground_terrain_path,
     )
 
     # Obstacles
@@ -52,11 +55,7 @@ class MarsTerrainSceneCfg(InteractiveSceneCfg):
         prim_path="/World/terrain/obstacles",
         spawn=sim_utils.UsdFileCfg(
             visible=True,
-            usd_path=os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "terrain1",
-                "rocks_merged.usd",
-            ),
+            usd_path=obstacles_path,
         ),
         init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )

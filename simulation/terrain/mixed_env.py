@@ -4,7 +4,7 @@ from isaaclab.terrains.trimesh import *
 from isaaclab.terrains.height_field import *
 
 mixed_terrain = TerrainImporterCfg(
-    prim_path="/World/Scene",
+    prim_path="/World/Terrain",
     terrain_type="generator",
     terrain_generator=TerrainGeneratorCfg(
         seed=0,
@@ -104,7 +104,7 @@ mixed_terrain = TerrainImporterCfg(
 )
 
 mixed_terrain2 = TerrainImporterCfg(
-    prim_path="/World/Scene",
+    prim_path="/World/Terrain",
     terrain_type="generator",
     terrain_generator=TerrainGeneratorCfg(
         seed=0,

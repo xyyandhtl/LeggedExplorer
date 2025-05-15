@@ -24,7 +24,8 @@ class AliengoArticulation(Articulation):
         for prim in matching_prims:
             contact_api: PhysxSchema.PhysxContactReportAPI = \
                 PhysxSchema.PhysxContactReportAPI.Get(stage, prim)
-            contact_api.CreateReportPairsRel().AddTarget("/World/terrain/obstacles/obstacles")
+            # contact_api.CreateReportPairsRel().AddTarget("/World/terrain/obstacles/obstacles")
+            contact_api.CreateReportPairsRel().AddTarget("/World/Terrain/Obstacles")
 
 class RoverArticulation(Articulation):
     def __init__(self, *args, **kwargs):
@@ -45,7 +46,8 @@ class RoverArticulation(Articulation):
         for prim in matching_prims:
             contact_api: PhysxSchema.PhysxContactReportAPI = \
                 PhysxSchema.PhysxContactReportAPI.Get(stage, prim)
-            contact_api.CreateReportPairsRel().AddTarget("/World/terrain/obstacles/obstacles")
+            # contact_api.CreateReportPairsRel().AddTarget("/World/terrain/obstacles/obstacles")
+            contact_api.CreateReportPairsRel().AddTarget("/World/Terrain/Obstacles")
 
 
 class FrankaArticulation(Articulation):

@@ -22,7 +22,8 @@ walk_while_yaw: True
 
 # sim config
 camera_follow: True
-init_pos: [-31, 0, 0.5]  # -26 -31 -16
+init_pos: [0, 0, 0.5]  # -26 -31 -16
+#init_pos: [33, 33, 0.5]  # -26 -31 -16
 #init_rot: [0.707, 0.0, 0.0, -0.707]
 init_rot: [1.0, 0.0, 0.0, 0.0]
 view_pos: [0, 0, 30.0]
@@ -43,6 +44,7 @@ enable_camera: True
 
 # environment config
 env_name: tunnel
+#env_name: mars
 #env_name: obstacle-dense
 #env_name: omni
 #env_name: carla
