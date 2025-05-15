@@ -124,16 +124,8 @@ class LeggedEnv(ManagerBasedRLEnv):
         # note: done after reset to get the correct observations for reset envs
         self.obs_buf = self.observation_manager.compute()
 
-        # assert torch.isneginf(self.obs_buf['policy']).any(), "Observation contains negInf values"
-        # nan: can't raycast scan dot, regard obstacle
-        # posinf: deep holes, regard flat ground considering locomotion can handle
-        # neginf: inf high obstacle, theoretically should not contain
         contain_nan = torch.isnan(self.obs_buf['policy']).any()
         contain_inf = torch.isinf(self.obs_buf['policy']).any()
-        # self.obs_buf['policy'] = torch.nan_to_num(self.obs_buf['policy'], nan=-1.0, posinf=0.0, neginf=-1.0)
-        # assert not torch.isnan(self.obs_buf['policy']).any(), "Observation contains NaN values"
-        # assert not torch.isinf(self.obs_buf['policy']).any(), "Observation contains Inf values"
-        # assert torch.isposinf(self.obs_buf['policy']).any(), "Observation contains posInf values"
         # 保存计数器
         if not hasattr(self, "_obs_save_counter"):
             self._obs_save_counter = 0

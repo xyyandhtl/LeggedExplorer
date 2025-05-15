@@ -90,7 +90,10 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
 
     def infer_action(self):
         input = torch.cat([self.env_last_action, self.scan_data], dim=1)
-        input = torch.nan_to_num(input, nan=0.0, posinf=0.0, neginf=0.0)
+        # nan: can't raycast scan dot, regard obstacle
+        # posinf: deep holes, regard flat ground considering locomotion can handle
+        # neginf: inf high obstacle, theoretically should not contain
+        input = torch.nan_to_num(input, nan=-1.0, posinf=0.0, neginf=-1.0)
         print(f'last_action/distance/heading/diff {input[:, 0:5]}')
         if not self.initialized:
             self.initialized = True
@@ -109,13 +112,13 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
             outputs = self.agent.act(input, timestep=0, timesteps=0)
             # print(f'planner outputs {outputs}')
             # actions = outputs[-1].get("mean_actions", outputs[0])
-            actions = outputs[0] - 0.0135
+            actions = outputs[0]    # - 0.0135
             # actions[:, 1] = actions[:, 1] * 0.5
             # print(f'planner actions {actions}')
             self.env_last_action = actions
         self.commands[:, [0, 2]] = actions.cpu().numpy()
-        self.commands[:, 0] *= 2.0
-        self.commands[:, 2] *= 0.25
+        # self.commands[:, 0] *= 2.0
+        # self.commands[:, 2] *= 0.25
 
 
 

@@ -107,7 +107,7 @@ class AliengoSimCfg(InteractiveSceneCfg):
 
     height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Aliengo/trunk",
-        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 3.0]),
+        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[3.0, 3.0]),
         debug_vis=True,
@@ -165,8 +165,8 @@ class ObservationsCfg:
         height_scan = ObsTerm(func=mdp.height_scan, scale=1,
                               params={"sensor_cfg": SceneEntityCfg("height_scanner"),
                                       # "offset": 0.26878},
-                                      "offset": 0.3 + 0.3},   # estimated robot base height
-                              # clip=(-1.0, 1.0),
+                                      "offset": 0.5 + 0.3},   # estimated robot base height
+                              clip=(-1.0, 1.0),
                               )
 
         def __post_init__(self) -> None:
@@ -196,15 +196,8 @@ class CommandsCfg:
         resampling_time_range=(50.0, 50.0),
         simple_heading=False,
         debug_vis=True,
-        # ranges=mdp.TerrainBasedPose2dCommandCfg.Ranges(
-        #     heading=(-math.pi, math.pi),
-        #     # pos_x=(5, 15),
-        # ),
-        ranges=mdp.UniformPose2dCommandCfg.Ranges(
-            heading=(-math.pi, math.pi),
-            pos_x=(5, 15),
-            pos_y=(-5, 5),
-        ),
+        ranges=mdp.TerrainBasedPose2dCommandCfg.Ranges(
+            heading=(-math.pi, math.pi)),
     )
     target_pose.goal_pose_visualizer_cfg.markers["arrow"].scale = (1.0, 1.0, 4.0)
 

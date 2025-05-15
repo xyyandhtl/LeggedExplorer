@@ -107,7 +107,7 @@ tunnel_terrain_tiny = TerrainImporterCfg(
             platform_width=2.0,
             avoid_positions=[],
             wall_height=1.0,
-            ground_height=-0.01, # -0.01  0
+            ground_height=0, # -0.01  0
             flat_patch_sampling={
                 "target": FlatPatchSamplingCfg(num_patches=100, patch_radius=0.5, max_height_diff=0.2),
                 "init_pos": FlatPatchSamplingCfg(num_patches=100, patch_radius=0.5, max_height_diff=0.2),
@@ -119,10 +119,43 @@ tunnel_terrain_tiny = TerrainImporterCfg(
 
 @configclass
 class TunnelTerrainSceneCfg(InteractiveSceneCfg):
-    terrain = ground_terrain_tiny
+    # terrain = ground_terrain_tiny
     obstacles = tunnel_terrain_tiny
     # combined_terrain_prim_path = "/World/Terrain/Combined"
 
+
+tunnel_terrain_single = TerrainImporterCfg(
+    class_type=TerrainImporter,
+    prim_path="/World/Terrain/Obstacles",
+    terrain_type="generator",
+    terrain_generator=TerrainGeneratorCfg(
+        seed=0,
+        size=(50, 5),
+        border_width=3,
+        # border_height=3.0,
+        num_rows=1,
+        num_cols=1,
+        color_scheme="height",
+        sub_terrains={"tunnel": HfTunnelTerrainCfg(
+            # seed=0,
+            # size=(50, 50),
+            obstacle_width_range=(0.5, 1.5),
+            obstacle_height_range=(0.05, 1.50),
+            num_obstacles=30,
+            obstacles_distance=0.4,
+            # border_width=5,
+            platform_width=0.8,
+            avoid_positions=[],
+            wall_height=1.0,
+            ground_height=0, # -0.01  0
+            flat_patch_sampling={
+                "target": FlatPatchSamplingCfg(num_patches=100, patch_radius=0.5, max_height_diff=0.2),
+                "init_pos": FlatPatchSamplingCfg(num_patches=100, patch_radius=0.5, max_height_diff=0.2),
+            }
+        )},
+    ),
+    visual_material=None,
+)
 
 
 sparse_obstacle_terrain = TerrainImporterCfg(

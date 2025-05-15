@@ -70,8 +70,8 @@ def run_simulator(cfg):
     # ===============================================================================================
     # Simulation environment
     if cfg.env_name == "tunnel":
-        from simulation.terrain.hf_env import tunnel_terrain
-        env_cfg.scene.terrain = tunnel_terrain
+        from simulation.terrain.hf_env import tunnel_terrain_single
+        env_cfg.scene.terrain = tunnel_terrain_single
     elif cfg.env_name == "obstacle-dense":
         from simulation.terrain.hf_env import dense_obstacle_terrain
         env_cfg.scene.terrain = dense_obstacle_terrain
