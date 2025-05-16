@@ -118,7 +118,7 @@ class AliengoRoverEnvCfg(LeggedEnvCfg):
 
         self.actions.actions = mdp.NavigationActionCfg(
             asset_name="robot",
-            low_level_decimation=4,
+            low_level_decimation=40,
             low_level_action=mdp.JointPositionActionCfg(
                 asset_name="robot", joint_names=[".*"], scale=0.5  # , use_default_offset=True
             ),

@@ -92,14 +92,16 @@ class RewardsCfg:
         weight=-0.1,
         params={},
     )
+    # diff of heading <--> the line to target
     angle_to_target = RewTerm(
         func=mdp.angle_to_target_penalty,
-        weight=-1.0,
+        weight=-5.0,
         params={"command_name": "target_pose"},
     )
+    # walking backwards penalty
     heading_soft_contraint = RewTerm(
         func=mdp.heading_soft_contraint,
-        weight=-2.0,
+        weight=-1.0,
         params={"asset_cfg": SceneEntityCfg(name="robot")},
     )
     # collision = RewTerm(
@@ -113,11 +115,26 @@ class RewardsCfg:
     #     weight=-2.0,
     #     params={"command_name": "target_pose", "threshold": 11.0},
     # )
+    # diff of heading <--> target heading
     angle_diff = RewTerm(
         func=mdp.angle_to_goal_reward,
-        weight=50.0,
+        weight=1.0,
         params={"command_name": "target_pose"},
     )
+
+    # exploration eq. 3
+    exploration = RewTerm(
+        func=mdp.exploration_reward,
+        params={"command_name": "target_pose"},
+        weight=1.0
+    )
+
+    # stalling penalty eq. 4
+    stalling = RewTerm(
+        func=mdp.stall_penalty,
+        weight=-0.1,
+        params={"command_name": "target_pose",
+                "distance_threshold": 0.2})
 
 
 @configclass

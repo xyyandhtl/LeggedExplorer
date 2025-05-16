@@ -3,6 +3,7 @@ import math
 import os
 import random
 import sys
+import numpy as np
 from datetime import datetime
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
@@ -157,7 +158,10 @@ def main():
     # num_actions = 2
     # num_obs = env.unwrapped.observation_manager.group_obs_dim["policy"][0]  # + num_actions
     observation_space = gym.spaces.Box(low=-math.inf, high=math.inf, shape=(num_obs,))
-    action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
+    low = np.array([-2.0, -0.5], dtype=np.float32)
+    high = np.array([2.0, 0.5], dtype=np.float32)
+    action_space = gym.spaces.Box(low=low, high=high, shape=(num_actions,))
+    # action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
     print(f'Observation space: {observation_space.shape}')
     print(f'Action space: {action_space.shape}')
     print(f'num envs: {env.num_envs}')

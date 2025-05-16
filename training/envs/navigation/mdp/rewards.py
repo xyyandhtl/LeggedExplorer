@@ -6,6 +6,7 @@ import torch
 # Importing necessary modules from the isaaclab package
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.sensors import ContactSensor
+from isaaclab.assets import Articulation
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
@@ -145,16 +146,45 @@ def far_from_target_reward(env: ManagerBasedRLEnv, command_name: str, threshold:
 def angle_to_goal_reward(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
     """
     Calculate the angle to the goal.
-
-    This function computes the angle between the rover's heading direction and the direction
-    towards the goal. A reward is given based on the cosine of this angle.
     """
-    # Get vector(x,y) from rover to target, in base frame of the rover.
     target_vector_b = env.command_manager.get_command(command_name)[:, :2]
     distance = torch.norm(target_vector_b, p=2, dim=-1)
     angle_b = env.command_manager.get_command(command_name)[:, 3]
 
-    angle_reward = (1 / (1 + distance)) * 1 / (1 + torch.abs(angle_b))
+    # 只在距离 ≤ 1m 时给予奖励
+    mask = distance <= 1.0
+    # 只对满足条件的样本产生奖励，其余为0
+    angle_reward = torch.cos(angle_b) / distance * mask
+    return angle_reward
 
-    # Return the cosine of the angle, normalized by the maximum episode length.
-    return angle_reward / env.max_episode_length
+
+def exploration_reward(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
+    # Retrieve the robot and target data
+    robot: Articulation = env.scene[robot_cfg.name]
+    base_velocity = robot.data.root_lin_vel_b  # Robot's current base velocity vector
+    target_position = env.command_manager.get_command(command_name)[:, :2]  # Target position vector relative to robot base
+
+    # Compute the dot product of the robot's base velocity and target position vectors
+    velocity_alignment = (base_velocity[:, :2] * target_position).sum(-1)
+
+    # Calculate the norms (magnitudes) of the velocity and target position vectors
+    velocity_magnitude = torch.norm(base_velocity, p=2, dim=-1)
+    target_magnitude = torch.norm(target_position, p=2, dim=-1)
+
+    # Calculate the exploration reward by normalizing the dot product (cosine similarity)
+    # Small epsilon added in denominator to prevent division by zero
+    exploration_reward = velocity_alignment / (velocity_magnitude * target_magnitude + 1e-6)
+    return exploration_reward
+
+
+def stall_penalty(
+    env: ManagerBasedRLEnv,
+    command_name: str,
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    base_vel_threshold: float = 0.1,
+    distance_threshold: float = 0.5,
+):
+    robot: Articulation = env.scene[robot_cfg.name]
+    base_vel = robot.data.root_lin_vel_b.norm(2, dim=-1)
+    distance_to_goal = env.command_manager.get_command(command_name)[:, :2].norm(2, dim=-1)
+    return (base_vel < base_vel_threshold) & (distance_to_goal > distance_threshold)

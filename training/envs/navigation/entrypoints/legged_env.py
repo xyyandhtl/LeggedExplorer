@@ -82,7 +82,7 @@ class LeggedEnv(ManagerBasedRLEnv):
             A tuple containing the observations, rewards, resets (terminated and truncated) and extras.
         """
         self.global_step_counter += 1
-
+        # print(f'action: {action}')
         # process actions
         self.action_manager.process_action(action)
         # perform physics stepping
