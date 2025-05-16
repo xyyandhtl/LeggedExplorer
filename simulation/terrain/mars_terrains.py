@@ -8,7 +8,7 @@ from isaaclab.utils.configclass import configclass
 
 from training.envs.navigation.utils.terrains.terrain_importer import RoverTerrainImporter
 
-base_path = f"{os.getenv('USER_PATH_TO_USD')}/terrain"
+base_path = f"{os.getenv('USER_PATH_TO_USD')}/terrains"
 print(f'terrain base_path {base_path}')
 ground_terrain_path = os.path.join(base_path, "mars", "terrain_only.usd")
 obstacles_path = os.path.join(base_path, "mars", "rocks_merged.usd")

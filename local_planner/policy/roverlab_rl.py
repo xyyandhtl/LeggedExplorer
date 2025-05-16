@@ -19,7 +19,10 @@ agent_policy_path = str(Path(__file__).resolve().parent.parent / 'ckpts/roverlab
 
 def get_ppo_agent(device):
     observation_space = Box(low=-math.inf, high=math.inf, shape=(966,))
-    action_space = Box(low=-1.0, high=1.0, shape=(2,))
+    low = np.array([-2.0, -0.5], dtype=np.float32)
+    high = np.array([2.0, 0.5], dtype=np.float32)
+    action_space = Box(low=low, high=high, shape=(2,))
+    # action_space = Box(low=-1.0, high=1.0, shape=(2,))
 
     # Define memory size
     memory_size = experiment_cfg_agent["rollouts"]

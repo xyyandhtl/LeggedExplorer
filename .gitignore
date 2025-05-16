@@ -9,6 +9,7 @@
 materials/
 Materials/
 textures/
+training/assets/terrains/
 
 # Ignore specific folders
 outputs/

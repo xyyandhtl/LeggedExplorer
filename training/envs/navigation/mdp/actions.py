@@ -24,7 +24,7 @@ class NavigationAction(ActionTerm):
         # self.resize_transform = torchvision.transforms.Resize((58, 87),
         #                                                       interpolation=torchvision.transforms.InterpolationMode.BICUBIC)
 
-        self.image_count = 0
+        # self.image_count = 0
 
         # # # load policies
         self.low_level_policy = load_policy_him('aliengo', device=self.device)

@@ -27,7 +27,7 @@ from .common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
 UNITREE_Aliengo_CFG = ArticulationCfg(
     prim_path="{ENV_REGEX_NS}/Aliengo",
     spawn=sim_utils.UsdFileCfg(
-        usd_path = f"{os.getenv('USER_PATH_TO_USD')}/robot/aliengo/aliengo.usd",
+        usd_path = f"{os.getenv('USER_PATH_TO_USD')}/robots/aliengo/aliengo.usd",
         activate_contact_sensors=True,
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=False,
