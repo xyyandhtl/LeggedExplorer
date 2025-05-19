@@ -35,7 +35,7 @@ AAU_ROVER_SIMPLE_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.0),
+        pos=(0.0, 0.0, 0.5),
         joint_pos={".*Steer_Revolute": 0.0},
         joint_vel={".*Steer_Revolute": 0.0, ".*Drive_Continuous": 0.0},
     ),

@@ -45,7 +45,7 @@ class LeggedEnv(ManagerBasedRLEnv):
         print(f'env max_episode_length is {self.max_episode_length}')
 
         self.global_step_counter = 0
-        self.log_filename = "height_scan_obs.txt"
+        self.log_filename = "policy_obs_0.txt"
 
     def _reset_idx(self, idx: torch.Tensor):
         """Reset the environment at the given indices.
@@ -124,18 +124,22 @@ class LeggedEnv(ManagerBasedRLEnv):
         # note: done after reset to get the correct observations for reset envs
         self.obs_buf = self.observation_manager.compute()
 
-        contain_nan = torch.isnan(self.obs_buf['policy']).any()
-        contain_inf = torch.isinf(self.obs_buf['policy']).any()
+        if self.global_step_counter == 10:
+            tmp = self.obs_buf["policy"][0].cpu().numpy()  # 转为 NumPy 数组，便于保存
+            # 保存为文本文件
+            np.savetxt("policy_obs_0_full.txt", tmp, fmt="%.6f", delimiter=",")
         # 保存计数器
         if not hasattr(self, "_obs_save_counter"):
             self._obs_save_counter = 0
         if self._obs_save_counter % 20 == 0:
-            policy_obs = self.obs_buf["policy"].cpu().numpy()
-            max_val = policy_obs.max()
-            min_val = policy_obs.min()
+            contain_nan = torch.isnan(self.obs_buf['policy']).any()
+            contain_inf = torch.isinf(self.obs_buf['policy']).any()
+            policy_obs_0 = self.obs_buf["policy"][0]
+            max_val = policy_obs_0.max().item()
+            min_val = policy_obs_0.min().item()
             with open(self.log_filename, "a") as f:
                 # np.savetxt(f, policy_obs, fmt="%.3f")
-                f.write(f"Step {self._obs_save_counter}: vel/angular/distance/heading/diff {self.obs_buf['policy'][0, 0:5]}"
+                f.write(f"Step {self._obs_save_counter}: vel/angular/distance/heading/diff {policy_obs_0[0:5]}"
                         f"contain_nan={contain_nan}, contain_inf={contain_inf}, "
                         f"max={max_val:.3f}, min={min_val:.3f}\n")
         self._obs_save_counter += 1

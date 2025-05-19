@@ -56,7 +56,7 @@ class LeggedSceneCfg(TunnelTerrainSceneCfg):
 
     robot: ArticulationCfg = MISSING
 
-    contact_sensor: ContactSensorCfg = MISSING
+    # contact_sensor: ContactSensorCfg = MISSING
 
     height_scanner: RayCasterCfg = MISSING
 
@@ -84,7 +84,7 @@ class RewardsCfg:
     )
     reached_target = RewTerm(
         func=mdp.reached_target,
-        weight=10.0,
+        weight=5.0,
         params={"command_name": "target_pose", "threshold": 0.2},
     )
     oscillation = RewTerm(
@@ -95,13 +95,13 @@ class RewardsCfg:
     # diff of heading <--> the line to target
     angle_to_target = RewTerm(
         func=mdp.angle_to_target_penalty,
-        weight=-5.0,
+        weight=-10.0,
         params={"command_name": "target_pose"},
     )
     # walking backwards penalty
     heading_soft_contraint = RewTerm(
         func=mdp.heading_soft_contraint,
-        weight=-1.0,
+        weight=-10.0,
         params={"asset_cfg": SceneEntityCfg(name="robot")},
     )
     # collision = RewTerm(
@@ -130,11 +130,11 @@ class RewardsCfg:
     )
 
     # stalling penalty eq. 4
-    stalling = RewTerm(
-        func=mdp.stall_penalty,
-        weight=-0.1,
-        params={"command_name": "target_pose",
-                "distance_threshold": 0.2})
+    # stalling = RewTerm(
+    #     func=mdp.stall_penalty,
+    #     weight=-0.02,
+    #     params={"command_name": "target_pose",
+    #             "distance_threshold": 0.2})
 
 
 @configclass
@@ -149,6 +149,10 @@ class TerminationsCfg:
     far_from_target = DoneTerm(
         func=mdp.far_from_target,
         params={"command_name": "target_pose", "threshold": 50.0},
+    )
+    robot_drop = DoneTerm(
+        func=mdp.root_height_below_minimum,
+        params={"minimum_height": 0.1,},
     )
     # todo: think if add collision DoneTerm?
     # collision = DoneTerm(
@@ -203,7 +207,7 @@ class LeggedEnvCfg(ManagerBasedRLEnvCfg):
 
     # Create scene
     scene: LeggedSceneCfg = LeggedSceneCfg(
-        num_envs=64, env_spacing=4.0, replicate_physics=False)
+        num_envs=1, env_spacing=4.0, replicate_physics=False)
 
     # Setup PhysX Settings
     sim: SimCfg = SimCfg(
@@ -251,8 +255,8 @@ class LeggedEnvCfg(ManagerBasedRLEnvCfg):
         # update sensor periods
         if self.scene.height_scanner is not None:
             self.scene.height_scanner.update_period = self.sim.dt * self.decimation
-        if self.scene.contact_sensor is not None:
-            self.scene.contact_sensor.update_period = self.sim.dt * self.decimation
+        # if self.scene.contact_sensor is not None:
+        #     self.scene.contact_sensor.update_period = self.sim.dt * self.decimation
 
 
 # todo: for flexible use

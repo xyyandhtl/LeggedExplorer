@@ -59,4 +59,4 @@ agent:
     wandb: False             # whether to use Weights & Biases
 
 trainer:
-  timesteps: 1000000
+  timesteps: 100000

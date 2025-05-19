@@ -62,9 +62,11 @@ class ObservationsCfg:
             func=mdp.height_scan,
             scale=1,
             params={"sensor_cfg": SceneEntityCfg(name="height_scanner"),
-                    "offset": 0.5 + 0.3},   # estimate robot base height 0.3, add sensor offset 0.5
-            noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05),
+                    "offset": 0.3},   # estimate robot base height 0.3, add sensor offset 0.5 0.5 + 0.3
+            # noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05),
             clip=(-1.0, 1.0),
+            # clip=(0, 20.0),
+            # clip=(-2.0, 2.0),
         )
 
         def __post_init__(self):
@@ -118,27 +120,27 @@ class AliengoRoverEnvCfg(LeggedEnvCfg):
 
         self.actions.actions = mdp.NavigationActionCfg(
             asset_name="robot",
-            low_level_decimation=40,
+            low_level_decimation=4,
             low_level_action=mdp.JointPositionActionCfg(
                 asset_name="robot", joint_names=[".*"], scale=0.5  # , use_default_offset=True
             ),
         )
 
-        self.scene.contact_sensor = ContactSensorCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/.*(foot|calf|thigh|hip|trunk)",
-            # filter_prim_paths_expr=["/World/terrain/obstacles/obstacles"],
-            # filter_prim_paths_expr=["/World/Terrain/Obstacles"],
-            # todo: /World/Terrain/Obstacles是由HfTunnelTerrainCfg → 生成 heightfield collider；
-            # heightfield collider 在 Isaac Sim 中目前不支持 GPU contact filtering（PhysX 限制）；
-        )
+        # self.scene.contact_sensor = ContactSensorCfg(
+        #     prim_path="{ENV_REGEX_NS}/Robot/.*(foot|calf|thigh|hip|trunk)",
+        #     # filter_prim_paths_expr=["/World/terrain/obstacles/obstacles"],
+        #     # filter_prim_paths_expr=["/World/Terrain/Obstacles"],
+        #     # todo: /World/Terrain/Obstacles是由HfTunnelTerrainCfg → 生成 heightfield collider；
+        #     # heightfield collider 在 Isaac Sim 中目前不支持 GPU contact filtering（PhysX 限制）；
+        # )
 
         self.scene.height_scanner = RayCasterCfg(
             prim_path="{ENV_REGEX_NS}/Robot/trunk",
-            offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
+            offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 10.0]),
             attach_yaw_only=True,
             # pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[5.0, 5.0]),
-            pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[3.0, 3.0]),
-            debug_vis=False,    # avoid training fall over markers cannot be zero
+            pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[5.0, 5.0]),
+            debug_vis=False,
             mesh_prim_paths=["/World/Terrain/Obstacles"],
             max_distance=100.0,
         )

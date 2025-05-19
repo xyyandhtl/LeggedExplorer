@@ -71,7 +71,7 @@ def get_model_gaussian_conv(env: ManagerBasedRLEnv, observation_space: Box, acti
     models = {}
     encoder_input_size = env.unwrapped.observation_manager.group_obs_term_dim["policy"][-1][0]
 
-    mlp_input_size = 5
+    mlp_input_size = 6
 
     models["policy"] = GaussianNeuralNetworkConv(
         observation_space=observation_space,

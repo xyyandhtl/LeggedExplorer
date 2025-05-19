@@ -30,7 +30,7 @@ def distance_to_target_reward(env: ManagerBasedRLEnv, command_name: str) -> torc
     scaled_distance = torch.clamp(torch.norm(target_position, p=2, dim=-1), 1.0) * 0.1
 
     # Return the reward, normalized by the maximum episode length
-    return 1.0 / (scaled_distance * scaled_distance) / env.max_episode_length
+    return 1.0 / scaled_distance / env.max_episode_length
 
 
 def reached_target(env: ManagerBasedRLEnv, command_name: str, threshold: float) -> torch.Tensor:
@@ -85,13 +85,6 @@ def oscillation_penalty(env: ManagerBasedRLEnv) -> torch.Tensor:
 
 
 def angle_to_target_penalty(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
-    """
-    Calculate the penalty for the angle between the rover and the target.
-
-    This function computes the angle between the rover's heading direction and the direction
-    towards the target. A penalty is applied if this angle exceeds a certain threshold.
-    """
-
     # Get vector(x,y) from rover to target, in base frame of the rover.
     target_vector_b = env.command_manager.get_command(command_name)[:, :2]
 
@@ -155,7 +148,7 @@ def angle_to_goal_reward(env: ManagerBasedRLEnv, command_name: str) -> torch.Ten
     mask = distance <= 1.0
     # 只对满足条件的样本产生奖励，其余为0
     angle_reward = torch.cos(angle_b) / distance * mask
-    return angle_reward
+    return angle_reward / env.max_episode_length
 
 
 def exploration_reward(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
@@ -174,7 +167,7 @@ def exploration_reward(env: ManagerBasedRLEnv, command_name: str, robot_cfg: Sce
     # Calculate the exploration reward by normalizing the dot product (cosine similarity)
     # Small epsilon added in denominator to prevent division by zero
     exploration_reward = velocity_alignment / (velocity_magnitude * target_magnitude + 1e-6)
-    return exploration_reward
+    return exploration_reward / env.max_episode_length
 
 
 def stall_penalty(
