@@ -76,15 +76,15 @@ class ActionsCfg:
 
 
 @configclass
-class RewardsCfg:
+class RewardsCfgRoverLab:
     distance_to_target = RewTerm(
         func=mdp.distance_to_target_reward,
-        weight=10.0,
-        params={"command_name": "target_pose"},
+        weight=1.0,
+        params={"command_name": "target_pose", "max_distance": 15.0},
     )
     reached_target = RewTerm(
         func=mdp.reached_target,
-        weight=5.0,
+        weight=1.0,
         params={"command_name": "target_pose", "threshold": 0.2},
     )
     oscillation = RewTerm(
@@ -95,26 +95,15 @@ class RewardsCfg:
     # diff of heading <--> the line to target
     angle_to_target = RewTerm(
         func=mdp.angle_to_target_penalty,
-        weight=-10.0,
+        weight=-5.0,
         params={"command_name": "target_pose"},
     )
     # walking backwards penalty
-    heading_soft_contraint = RewTerm(
-        func=mdp.heading_soft_contraint,
+    heading_backwards = RewTerm(
+        func=mdp.heading_backwards_penalty,
         weight=-10.0,
         params={"asset_cfg": SceneEntityCfg(name="robot")},
     )
-    # collision = RewTerm(
-    #     func=mdp.collision_penalty,
-    #     weight=-0.5,    #-3.0,
-    #     params={"sensor_cfg": SceneEntityCfg(
-    #         "contact_sensor"), "threshold": 1.0},
-    # )
-    # far_from_target = RewTerm(
-    #     func=mdp.far_from_target_reward,
-    #     weight=-2.0,
-    #     params={"command_name": "target_pose", "threshold": 11.0},
-    # )
     # diff of heading <--> target heading
     angle_diff = RewTerm(
         func=mdp.angle_to_goal_reward,
@@ -122,19 +111,50 @@ class RewardsCfg:
         params={"command_name": "target_pose"},
     )
 
-    # exploration eq. 3
-    exploration = RewTerm(
-        func=mdp.exploration_reward,
+    lateral_vel = RewTerm(
+        func=mdp.lateral_movement_penalty,
+        weight=-0.5,
         params={"command_name": "target_pose"},
-        weight=1.0
     )
 
+
+@configclass
+class RewardsCfgUWLab:
+    task_reward = RewTerm(func=mdp.task_reward, weight=10.0, params={"reward_window": 1.0})
+    heading_reward = RewTerm(
+        func=mdp.heading_tracking, weight=10.0, params={"distance_threshold": 0.5, "reward_window": 1.0}
+    )
+
+    # joint_accel_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)
+    # joint_torque_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-1.0e-5)
+    # undesired_contact = RewTerm(
+    #     func=mdp.undesired_contacts,
+    #     weight=-1.0,
+    #     params={
+    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*THIGH"),
+    #         "threshold": 1.0,
+    #     },
+    # )
+
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
+    # feet_lin_acc_l2 = RewTerm(
+    #     func=mdp.feet_lin_acc_l2, weight=-4e-6, params={"robot_cfg": SceneEntityCfg("robot", body_names=".*FOOT")}
+    # )
+    # feet_rot_acc_l2 = RewTerm(
+    #     func=mdp.feet_rot_acc_l2, weight=-2e-7, params={"robot_cfg": SceneEntityCfg("robot", body_names=".*FOOT")}
+    # )
+
+    # illegal_contact_penalty = RewTerm(
+    #     func=mdp.illegal_contact_penalty,
+    #     weight=-3,
+    #     params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base"), "threshold": 1.0},
+    # )
+
+    # exploration eq. 3
+    exploration = RewTerm(func=mdp.exploration_reward, weight=1.0)
+
     # stalling penalty eq. 4
-    # stalling = RewTerm(
-    #     func=mdp.stall_penalty,
-    #     weight=-0.02,
-    #     params={"command_name": "target_pose",
-    #             "distance_threshold": 0.2})
+    stalling = RewTerm(func=mdp.stall_penalty, weight=-1.5, params={"distance_threshold": 0.2})
 
 
 @configclass
@@ -236,7 +256,8 @@ class LeggedEnvCfg(ManagerBasedRLEnvCfg):
     events: EventCfg = EventCfg()
 
     # MDP Settings
-    rewards: RewardsCfg = RewardsCfg()
+    # rewards: RewardsCfgRoverLab = RewardsCfgRoverLab()
+    rewards: RewardsCfgUWLab = RewardsCfgUWLab()
     terminations: TerminationsCfg = TerminationsCfg()
     # commands: CommandsCfg = CommandsCfg()
     # curriculum: CurriculumCfg = CurriculumCfg()

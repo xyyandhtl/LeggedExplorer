@@ -19,10 +19,10 @@ agent_policy_path = str(Path(__file__).resolve().parent.parent / 'ckpts/roverlab
 
 def get_ppo_agent(device):
     observation_space = Box(low=-math.inf, high=math.inf, shape=(2607,))
-    # low = np.array([-2.0, -0.5], dtype=np.float32)
-    # high = np.array([2.0, 0.5], dtype=np.float32)
-    # action_space = Box(low=low, high=high, shape=(2,))
-    action_space = Box(low=-1.0, high=1.0, shape=(3,))
+    low = np.array([-2.0, -2.0, -0.5], dtype=np.float32)
+    high = np.array([2.0, 2.0, 0.5], dtype=np.float32)
+    action_space = Box(low=low, high=high, shape=(3,))
+    # action_space = Box(low=-1.0, high=1.0, shape=(3,))
 
     # Define memory size
     memory_size = experiment_cfg_agent["rollouts"]
@@ -117,9 +117,9 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
             # actions = outputs[-1].get("mean_actions", outputs[0])
             actions = outputs[0]    # - 0.0135
             self.env_last_action = actions.clone()
-            actions[:, 0] = actions[:, 0] * 2.0
-            actions[:, 1] = actions[:, 1] * 2.0
-            actions[:, 2] = actions[:, 2] * 0.25
+            # actions[:, 0] = actions[:, 0] * 2.0
+            # actions[:, 1] = actions[:, 1] * 2.0
+            # actions[:, 2] = actions[:, 2] * 0.25
             # print(f'planner actions {actions}')
         # self.commands[:, [0, 2]] = actions.cpu().numpy()
         # self.commands[:, [0, 2]] = actions.cpu().numpy()

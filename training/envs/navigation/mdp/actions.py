@@ -90,9 +90,10 @@ class NavigationAction(ActionTerm):
         # Store low level navigation actions
         self._raw_navigation_velocity_actions[:] = actions
 
-        self._processed_navigation_velocity_actions[:, 0] = actions[:, 0] * 2.0  # todo: not apply scale here
-        self._processed_navigation_velocity_actions[:, 1] = actions[:, 1] * 2.0
-        self._processed_navigation_velocity_actions[:, 2] = actions[:, 2] * 0.25
+        # self._processed_navigation_velocity_actions[:, 0] = actions[:, 0] * 2.0  # todo: not apply scale here
+        # self._processed_navigation_velocity_actions[:, 1] = actions[:, 1] * 2.0
+        # self._processed_navigation_velocity_actions[:, 2] = actions[:, 2] * 0.25
+        self._processed_navigation_velocity_actions[:] = actions
         # self._processed_navigation_velocity_actions[:, 0] = actions[:, 0]
         # self._processed_navigation_velocity_actions[:, 2] = actions[:, 1]
 
