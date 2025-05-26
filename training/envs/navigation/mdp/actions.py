@@ -34,7 +34,7 @@ class NavigationAction(ActionTerm):
 
         # prepare buffers
         self._action_dim = (
-            2
+            3
         )  # [vx, vy, omega] --> vx: [-0.5,1.0], vy: [-0.5,0.5], omega: [-1.0,1.0]
         self._raw_navigation_velocity_actions = torch.zeros(self.num_envs, self._action_dim, device=self.device)
         self._processed_navigation_velocity_actions = torch.zeros(
@@ -91,9 +91,11 @@ class NavigationAction(ActionTerm):
         self._raw_navigation_velocity_actions[:] = actions
 
         # self._processed_navigation_velocity_actions[:, 0] = actions[:, 0] * 2.0  # todo: not apply scale here
-        # self._processed_navigation_velocity_actions[:, 2] = actions[:, 1] * 0.5
-        self._processed_navigation_velocity_actions[:, 0] = actions[:, 0]
-        self._processed_navigation_velocity_actions[:, 2] = actions[:, 1]
+        # self._processed_navigation_velocity_actions[:, 1] = actions[:, 1] * 2.0
+        # self._processed_navigation_velocity_actions[:, 2] = actions[:, 2] * 0.25
+        self._processed_navigation_velocity_actions[:] = actions
+        # self._processed_navigation_velocity_actions[:, 0] = actions[:, 0]
+        # self._processed_navigation_velocity_actions[:, 2] = actions[:, 1]
 
     def apply_actions(self):
         """Apply low-level actions for the simulator to the physics engine. This functions is called with the

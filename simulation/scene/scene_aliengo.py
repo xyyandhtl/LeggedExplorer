@@ -109,7 +109,7 @@ class AliengoSimCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Aliengo/trunk",
         offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
         attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[3.0, 3.0]),
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[5.0, 5.0]),
         debug_vis=True,
         mesh_prim_paths=["/World/Terrain"],
         max_distance=100.0,
@@ -165,7 +165,7 @@ class ObservationsCfg:
         height_scan = ObsTerm(func=mdp.height_scan, scale=1,
                               params={"sensor_cfg": SceneEntityCfg("height_scanner"),
                                       # "offset": 0.26878},
-                                      "offset": 0.5 + 0.3},   # estimated robot base height
+                                      "offset": 0.3},   # estimated robot base height
                               clip=(-1.0, 1.0),
                               )
 

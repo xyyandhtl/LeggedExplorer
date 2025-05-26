@@ -1,168 +1,58 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import torch
-# Importing necessary modules from the isaaclab package
+
+from isaaclab.assets import Articulation
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.sensors import ContactSensor
-from isaaclab.assets import Articulation
-
-if TYPE_CHECKING:
-    from isaaclab.envs import ManagerBasedRLEnv
+# if TYPE_CHECKING:
+from isaaclab.envs import ManagerBasedRLEnv
 
 
-def distance_to_target_reward(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
-    """
-    Calculate and return the distance to the target.
+def task_reward(
+    env: ManagerBasedRLEnv, reward_window: float = 1.0  # Represents Tr, the length of the reward window
+):
+    #
+    # See section II.B (page 3) Exploration Reward for details.
+    # Calculate the time step at which the reward window starts
+    reward_start_step = env.max_episode_length * (1 - reward_window / env.max_episode_length_s)
 
-    This function computes the Euclidean distance between the rover and the target.
-    It then calculates a reward based on this distance, which is inversely proportional
-    to the squared distance. The reward is also normalized by the maximum episode length.
-    """
+    # Calculate the distance to the goal (‖xb − x∗b‖^2), squared L2 norm of the difference
+    distance_to_goal = env.command_manager.get_command("target_pose")[:, :2].norm(2, -1).pow(2)
 
-    # Accessing the target's position through the command manage,
-    # we get the target position w.r.t. the robot frame
-    target = env.command_manager.get_command(command_name)
-    target_position = target[:, :2]
+    # Calculate task reward as per the equation:
+    # If within the reward window, r_task is non-zero
+    task_reward = (1 / (1 + distance_to_goal)) * (env.episode_length_buf > reward_start_step).float()
+    residue_task_reward = (1 / reward_window) * task_reward
 
-    # Calculating the distance and the reward, closer than 1m clamp to 1
-    scaled_distance = torch.clamp(torch.norm(target_position, p=2, dim=-1), 1.0) * 0.1
+    # TODO: Try no to change exploration weight here.
+    # "The following line removes the exploration reward (r_bias) once the task reward (r_task)
+    #  reaches 50% of its maximum value, as described in the paper." [II.B (page 3)]
+    if task_reward.mean() > 0.5 and (env.reward_manager.get_term_cfg("exploration").weight > 0.0):
+        env.reward_manager.get_term_cfg("exploration").weight = 0.0
 
-    # Return the reward, normalized by the maximum episode length
-    return 1.0 / (scaled_distance * scaled_distance) / env.max_episode_length
-
-
-def reached_target(env: ManagerBasedRLEnv, command_name: str, threshold: float) -> torch.Tensor:
-    """
-    Determine whether the target has been reached.
-
-    This function checks if the rover is within a certain threshold distance from the target.
-    If the target is reached, a scaled reward is returned based on the remaining time steps.
-    """
-
-    # Accessing the target's position w.r.t. the robot frame
-    target = env.command_manager.get_command(command_name)
-    target_position = target[:, :2]
-
-    # Get angle to target
-    angle = env.command_manager.get_command(command_name)[:, 3]
-
-    # Calculating the distance and determining if the target is reached
-    distance = torch.norm(target_position, p=2, dim=-1)
-    time_steps_to_goal = env.max_episode_length - env.episode_length_buf
-    reward_scale = time_steps_to_goal / env.max_episode_length
-
-    # Return the reward, scaled depending on the remaining time steps
-    return torch.where((distance < threshold) & (torch.abs(angle) < 0.1), 2.0 * reward_scale, 0.0)
+    return residue_task_reward
 
 
-def oscillation_penalty(env: ManagerBasedRLEnv) -> torch.Tensor:
-    """
-    Calculate the oscillation penalty.
-
-    This function penalizes the rover for oscillatory movements by comparing the difference
-    in consecutive actions. If the difference exceeds a threshold, a squared penalty is applied.
-    """
-    # Accessing the rover's actions
-    action = env.action_manager.action
-    prev_action = env.action_manager.prev_action
-
-    # Calculating differences between consecutive actions
-    linear_diff = action[:, 1] - prev_action[:, 1]
-    angular_diff = action[:, 0] - prev_action[:, 0]
-
-    # TODO combine these 5 lines into two lines
-    angular_penalty = torch.where(
-        angular_diff*3 > 0.05, torch.square(angular_diff*3), 0.0)
-    linear_penalty = torch.where(
-        linear_diff*3 > 0.05, torch.square(linear_diff*3), 0.0)
-
-    angular_penalty = torch.pow(angular_penalty, 2)
-    linear_penalty = torch.pow(linear_penalty, 2)
-
-    return (angular_penalty + linear_penalty) / env.max_episode_length
+def heading_tracking(env: ManagerBasedRLEnv, distance_threshold: float = 2.0, reward_window: float = 2.0):
+    desired_heading = env.command_manager.get_command("target_pose")[:, 3]
+    reward_start_step = env.max_episode_length * (1 - reward_window / env.max_episode_length_s)
+    current_dist = env.command_manager.get_command("target_pose")[:, :2].norm(2, -1)
+    r_heading_tracking = (
+        1
+        / reward_window
+        * (1 / (1 + desired_heading.pow(2)))
+        * (current_dist < distance_threshold).float()
+        * (env.episode_length_buf > reward_start_step).float()
+    )
+    return r_heading_tracking
 
 
-def angle_to_target_penalty(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
-    """
-    Calculate the penalty for the angle between the rover and the target.
-
-    This function computes the angle between the rover's heading direction and the direction
-    towards the target. A penalty is applied if this angle exceeds a certain threshold.
-    """
-
-    # Get vector(x,y) from rover to target, in base frame of the rover.
-    target_vector_b = env.command_manager.get_command(command_name)[:, :2]
-
-    # Calculate the angle between the rover's heading [1, 0] and the vector to the target.
-    angle = torch.atan2(target_vector_b[:, 1], target_vector_b[:, 0])
-
-    # Return the absolute value of the angle, normalized by the maximum episode length.
-    return torch.where(torch.abs(angle) > 2.0, torch.abs(angle) / env.max_episode_length, 0.0)
-
-
-def heading_soft_contraint(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Tensor:
-    """
-    Calculate a penalty for driving backwards.
-
-    This function applies a penalty when the rover's action indicates reverse movement.
-    The penalty is normalized by the maximum episode length.
-    """
-    return torch.where(env.action_manager.action[:, 0] < 0.0, (1.0 / env.max_episode_length), 0.0)
-
-
-def collision_penalty(env: ManagerBasedRLEnv, sensor_cfg: SceneEntityCfg, threshold: float) -> torch.Tensor:
-    """
-    Calculate a penalty for collisions detected by the sensor.
-
-    This function checks for forces registered by the rover's contact sensor.
-    If the total force exceeds a certain threshold, it indicates a collision,
-    and a penalty is applied.
-    """
-    # Accessing the contact sensor and its data
-    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
-
-    force_matrix = contact_sensor.data.force_matrix_w.view(env.num_envs, -1, 3)
-    # Calculating the force and applying a penalty if collision forces are detected
-    normalized_forces = torch.norm(force_matrix, dim=1)
-    forces_active = torch.sum(normalized_forces, dim=-1) > 1
-    return torch.where(forces_active, 1.0, 0.0)
-
-
-def far_from_target_reward(env: ManagerBasedRLEnv, command_name: str, threshold: float) -> torch.Tensor:
-    """
-    Gives a penalty if the rover is too far from the target.
-    """
-
-    target = env.command_manager.get_command(command_name)
-    target_position = target[:, :2]
-
-    distance = torch.norm(target_position, p=2, dim=-1)
-
-    return torch.where(distance > threshold, 1.0, 0.0)
-
-
-def angle_to_goal_reward(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
-    """
-    Calculate the angle to the goal.
-    """
-    target_vector_b = env.command_manager.get_command(command_name)[:, :2]
-    distance = torch.norm(target_vector_b, p=2, dim=-1)
-    angle_b = env.command_manager.get_command(command_name)[:, 3]
-
-    # 只在距离 ≤ 1m 时给予奖励
-    mask = distance <= 1.0
-    # 只对满足条件的样本产生奖励，其余为0
-    angle_reward = torch.cos(angle_b) / distance * mask
-    return angle_reward
-
-
-def exploration_reward(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
+def exploration_reward(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
     # Retrieve the robot and target data
     robot: Articulation = env.scene[robot_cfg.name]
     base_velocity = robot.data.root_lin_vel_b  # Robot's current base velocity vector
-    target_position = env.command_manager.get_command(command_name)[:, :2]  # Target position vector relative to robot base
+    target_position = env.command_manager.get_command("target_pose")[
+        :, :2
+    ]  # Target position vector relative to robot base
 
     # Compute the dot product of the robot's base velocity and target position vectors
     velocity_alignment = (base_velocity[:, :2] * target_position).sum(-1)
@@ -179,12 +69,60 @@ def exploration_reward(env: ManagerBasedRLEnv, command_name: str, robot_cfg: Sce
 
 def stall_penalty(
     env: ManagerBasedRLEnv,
-    command_name: str,
     robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     base_vel_threshold: float = 0.1,
     distance_threshold: float = 0.5,
 ):
     robot: Articulation = env.scene[robot_cfg.name]
     base_vel = robot.data.root_lin_vel_b.norm(2, dim=-1)
-    distance_to_goal = env.command_manager.get_command(command_name)[:, :2].norm(2, dim=-1)
+    distance_to_goal = env.command_manager.get_command("target_pose")[:, :2].norm(2, dim=-1)
     return (base_vel < base_vel_threshold) & (distance_to_goal > distance_threshold)
+
+
+def illegal_contact_penalty(env: ManagerBasedRLEnv, threshold: float, sensor_cfg: SceneEntityCfg):
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]  # type: ignore
+    net_contact_forces = contact_sensor.data.net_forces_w_history
+    # check if any contact force exceeds the threshold
+    return torch.any(
+        torch.max(torch.norm(net_contact_forces[:, :, sensor_cfg.body_ids], dim=-1), dim=1)[0] > threshold,
+        dim=1,  # type: ignore
+    ).float()
+
+
+def feet_lin_acc_l2(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
+    robot: Articulation = env.scene[robot_cfg.name]
+    feet_acc = torch.sum(torch.square(robot.data.body_lin_acc_w[..., robot_cfg.body_ids, :]), dim=(1, 2))
+    return feet_acc
+
+
+def feet_rot_acc_l2(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
+    robot: Articulation = env.scene[robot_cfg.name]
+    feet_acc = torch.sum(torch.square(robot.data.body_ang_acc_w[..., robot_cfg.body_ids, :]), dim=(1, 2))
+    return feet_acc
+
+
+def stand_penalty(
+    env: ManagerBasedRLEnv,
+    height_threshold: float,
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    robot: Articulation = env.scene[robot_cfg.name]
+    base_height = robot.data.root_link_pos_w[:, 2]  # z-coordinate of the base
+    penalty = (base_height < height_threshold).float() * -1.0
+    return penalty
+
+
+def reward_forward_velocity(
+    env: ManagerBasedRLEnv,
+    std: float,
+    max_iter: int = 150,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Reward tracking of linear velocity commands (xy axes) using exponential kernel."""
+    # extract the used quantities (to enable type-hinting)
+    asset: Articulation = env.scene[asset_cfg.name]
+    root_lin_vel_b = asset.data.root_lin_vel_b
+    forward_velocity = root_lin_vel_b[:, 0]
+    current_iter = int(env.common_step_counter / 48)
+    distance = torch.norm(env.command_manager.get_command("target_pose")[:, :2], dim=1)
+    return torch.where(distance > 0.4, torch.tanh(forward_velocity.clamp(-1, 1) / std) * (current_iter < max_iter), 0)

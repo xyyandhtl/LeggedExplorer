@@ -158,8 +158,8 @@ def train():
     # num_actions = 2
     # num_obs = env.unwrapped.observation_manager.group_obs_dim["policy"][0] + num_actions
     observation_space = gym.spaces.Box(low=-math.inf, high=math.inf, shape=(num_obs,))
-    low = np.array([-2.0, -0.5], dtype=np.float32)
-    high = np.array([2.0, 0.5], dtype=np.float32)
+    low = np.array([-2.0, -2.0, -0.5], dtype=np.float32)
+    high = np.array([2.0, 2.0, 0.5], dtype=np.float32)
     action_space = gym.spaces.Box(low=low, high=high, shape=(num_actions,))
     # action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
     print(f'Observation space: {observation_space.shape}')

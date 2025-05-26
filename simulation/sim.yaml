@@ -12,7 +12,7 @@ policy_device: cuda:0
 # planner config
 local_planner: rl_roverlab    # rl_roverlab depth_planner
 data_access_method: direct    # 'direct' 'ros2'
-local_planner_freq: 20.0
+local_planner_freq: 5.0 # 20.0
 goal_type: blind              # dont know world pose: 'blind' todo: 'pose'
 goal_cmd: [1.0, 0.0, 0.0]
 

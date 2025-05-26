@@ -134,7 +134,7 @@ import training.envs.navigation.robots  # noqa: E402, F401
 from training.envs.navigation.learning.skrl import get_agent  # noqa: E402
 from training.scripts.config import parse_skrl_cfg  # noqa: E402
 
-from simulation.agent.agent_sensors import create_view_camera
+# from simulation.agent.agent_sensors import create_view_camera
 
 def main():
     args_cli_seed = args_cli.seed if args_cli.seed is not None else random.randint(0, 100000000)
@@ -158,8 +158,8 @@ def main():
     # num_actions = 2
     # num_obs = env.unwrapped.observation_manager.group_obs_dim["policy"][0]  # + num_actions
     observation_space = gym.spaces.Box(low=-math.inf, high=math.inf, shape=(num_obs,))
-    low = np.array([-2.0, -0.5], dtype=np.float32)
-    high = np.array([2.0, 0.5], dtype=np.float32)
+    low = np.array([-2.0, -2.0, -0.5], dtype=np.float32)
+    high = np.array([2.0, 2.0, 0.5], dtype=np.float32)
     action_space = gym.spaces.Box(low=low, high=high, shape=(num_actions,))
     # action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(num_actions,))
     print(f'Observation space: {observation_space.shape}')
@@ -172,7 +172,7 @@ def main():
     trainer_cfg["timesteps"] = 1000000
 
     agent = get_agent(args_cli.agent, env, observation_space, action_space, experiment_cfg, conv=True)
-    create_view_camera([38, 33, 2], [90, 0, 0])
+    # create_view_camera([38, 33, 2], [90, 0, 0])
 
     # Get the checkpoint path from the experiment configuration
     print(f'args_cli.task: {args_cli.task}')

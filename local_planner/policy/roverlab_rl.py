@@ -18,11 +18,11 @@ agent_policy_path = str(Path(__file__).resolve().parent.parent / 'ckpts/roverlab
 
 
 def get_ppo_agent(device):
-    observation_space = Box(low=-math.inf, high=math.inf, shape=(966,))
-    low = np.array([-2.0, -0.5], dtype=np.float32)
-    high = np.array([2.0, 0.5], dtype=np.float32)
-    action_space = Box(low=low, high=high, shape=(2,))
-    # action_space = Box(low=-1.0, high=1.0, shape=(2,))
+    observation_space = Box(low=-math.inf, high=math.inf, shape=(2607,))
+    low = np.array([-2.0, -2.0, -0.5], dtype=np.float32)
+    high = np.array([2.0, 2.0, 0.5], dtype=np.float32)
+    action_space = Box(low=low, high=high, shape=(3,))
+    # action_space = Box(low=-1.0, high=1.0, shape=(3,))
 
     # Define memory size
     memory_size = experiment_cfg_agent["rollouts"]
@@ -30,9 +30,9 @@ def get_ppo_agent(device):
     # Get the models
     # models = get_models("PPO", env, observation_space, action_space, conv)
     models = {}
-    encoder_input_size = 961
+    encoder_input_size = 2601
 
-    mlp_input_size = 5
+    mlp_input_size = 6
 
     models["policy"] = GaussianNeuralNetworkConv(
         observation_space=observation_space,
@@ -83,7 +83,7 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
         # self.obstacle_buf = np.zeros((self.num_envs, 4))
         # self.commands = np.zeros((self.num_envs, 3))  # x vel, y vel, yaw vel, heading
 
-        self.env_last_action = torch.zeros((self.num_envs, 2,), device=self.device)
+        self.env_last_action = torch.zeros((self.num_envs, 3,), device=self.device)
         # self.env_left_dis = np.zeros((self.num_envs, 1))
         # self.env_right_dis = np.zeros((self.num_envs, 1))
 
@@ -96,8 +96,8 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
         # nan: can't raycast scan dot, regard obstacle
         # posinf: deep holes, regard flat ground considering locomotion can handle
         # neginf: inf high obstacle, theoretically should not contain
-        input = torch.nan_to_num(input, nan=-1.0, posinf=0.0, neginf=-1.0)
-        print(f'last_action/distance/heading/diff {input[:, 0:5]}')
+        # input = torch.nan_to_num(input, nan=-1.0, posinf=0.0, neginf=-1.0)
+        print(f'last_action/distance/heading/diff {input[:, 0:6]}')
         if not self.initialized:
             self.initialized = True
             input_np = input.detach().cpu().numpy()  # 转为 NumPy 数组，便于保存
@@ -116,14 +116,14 @@ class LocalPlannerRLRoverLab(LocalPlannerIsaac):
             # print(f'planner outputs {outputs}')
             # actions = outputs[-1].get("mean_actions", outputs[0])
             actions = outputs[0]    # - 0.0135
-            # actions[:, 1] = actions[:, 1] * 0.5
+            self.env_last_action = actions.clone()
+            # actions[:, 0] = actions[:, 0] * 2.0
+            # actions[:, 1] = actions[:, 1] * 2.0
+            # actions[:, 2] = actions[:, 2] * 0.25
             # print(f'planner actions {actions}')
-            self.env_last_action = actions
-        self.commands[:, [0, 2]] = actions.cpu().numpy()
-        # self.commands[:, 0] *= 2.0
-        # self.commands[:, 2] *= 0.25
-
-
+        # self.commands[:, [0, 2]] = actions.cpu().numpy()
+        # self.commands[:, [0, 2]] = actions.cpu().numpy()
+        self.commands[:] = actions.cpu().numpy()
 
 
 if __name__ == "__main__":

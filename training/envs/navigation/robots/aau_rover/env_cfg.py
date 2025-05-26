@@ -35,8 +35,8 @@ class ObservationsCfg:
         height_scan = ObsTerm(
             func=mdp.height_scan,
             scale=1,
-            params={"sensor_cfg": SceneEntityCfg(name="height_scanner"), "offset": 0.5 + 0.5},
-            noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05),
+            params={"sensor_cfg": SceneEntityCfg(name="height_scanner"), "offset": 0.26878},
+            # noise=UniformNoiseCfg(n_min=-0.05, n_max=0.05),
             clip=(-1.0, 1.0),
         )
 
@@ -90,18 +90,18 @@ class AAURoverEnvCfg(LeggedEnvCfg):
             offset=-0.0135
         )
 
-        self.scene.contact_sensor = ContactSensorCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/.*_(Drive|Steer|Boogie|Body)",
-            # filter_prim_paths_expr=["/World/terrain/obstacles/obstacles"],
-            # filter_prim_paths_expr=["/World/Terrain/Obstacles"],
-        )
+        # self.scene.contact_sensor = ContactSensorCfg(
+        #     prim_path="{ENV_REGEX_NS}/Robot/.*_(Drive|Steer|Boogie|Body)",
+        #     # filter_prim_paths_expr=["/World/terrain/obstacles/obstacles"],
+        #     # filter_prim_paths_expr=["/World/Terrain/Obstacles"],
+        # )
 
         self.scene.height_scanner = RayCasterCfg(
             prim_path="{ENV_REGEX_NS}/Robot/Body",
-            offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
+            offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 10.0]),
             attach_yaw_only=True,
-            pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[3.0, 3.0]),
-            debug_vis=True,
+            pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[5.0, 5.0]),
+            debug_vis=False,
             mesh_prim_paths=["/World/Terrain/Obstacles"],
             max_distance=100.0,
         )
