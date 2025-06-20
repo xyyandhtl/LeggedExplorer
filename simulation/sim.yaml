@@ -43,8 +43,9 @@ enable_lidar: False
 enable_camera: True
 
 # environment config
-env_name: tunnel
+#env_name: tunnel
 #env_name: mars
+env_name: stairs
 #env_name: obstacle-dense
 #env_name: omni
 #env_name: carla
