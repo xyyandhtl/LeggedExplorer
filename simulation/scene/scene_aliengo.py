@@ -45,16 +45,16 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.45),
         joint_pos={
-            # ".*L_hip_joint": 0.1,
-            # ".*R_hip_joint": -0.1,
-            # "F[L,R]_thigh_joint": 0.8,
-            # "R[L,R]_thigh_joint": 1.0,
-            # ".*_calf_joint": -1.5,
-            ".*L_hip_joint": 0.0,
-            ".*R_hip_joint": -0.0,
+            ".*L_hip_joint": 0.1,
+            ".*R_hip_joint": -0.1,
             "F[L,R]_thigh_joint": 0.8,
-            "R[L,R]_thigh_joint": 0.8,
+            "R[L,R]_thigh_joint": 1.0,
             ".*_calf_joint": -1.5,
+            # ".*L_hip_joint": 0.0,
+            # ".*R_hip_joint": -0.0,
+            # "F[L,R]_thigh_joint": 0.8,
+            # "R[L,R]_thigh_joint": 0.8,
+            # ".*_calf_joint": -1.5,
         },
         joint_vel={".*": 0.0},
     ),
@@ -62,9 +62,9 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
     actuators={
         "base_legs": DCMotorCfg(
             joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
-            effort_limit=35,    # refer to Aliengo urdf
-            saturation_effort=35,
-            velocity_limit=13.0,
+            effort_limit=55,    # refer to Aliengo urdf
+            saturation_effort=55,
+            velocity_limit=20.0,
             stiffness=40.0,
             damping=2.0,
             friction=0.0,
@@ -103,7 +103,7 @@ class AliengoSimCfg(InteractiveSceneCfg):
     print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
 
     # Aliengo foot contact sensor
-    # contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*_foot", history_length=3, track_air_time=True)
+    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*", history_length=3, track_air_time=True)
 
     height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Aliengo/trunk",
@@ -135,7 +135,7 @@ class ObservationsCfg:
         #                        params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
 
         # Note: himloco policy velocity command is ahead, wmp policy velocity command is behind
-        base_vel_cmd = ObsTerm(func=base_vel_cmd)
+        base_vel_cmd = ObsTerm(func=base_vel_cmd)  # him_loco的scale=(2,2,0.25)，但是y速度太大，y平移不稳定
 
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25,
                                params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
@@ -225,7 +225,7 @@ class AliengoRSLEnvCfg(ManagerBasedRLEnvCfg):
         self.viewer.lookat = (0.0, 0.0, 0.0)
 
         # step settings
-        self.decimation = 8  # step
+        self.decimation = 4  # step
 
         # simulation settings
         self.sim.dt = 0.005  #  0.005  # sim step every

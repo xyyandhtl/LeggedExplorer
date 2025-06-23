@@ -45,13 +45,20 @@ def run_simulator(cfg):
         env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
         sm = agent_sensors.SensorManager(cfg.num_envs, 'A1')
     elif cfg.robot_name == 'aliengo':
-        from simulation.scene.scene_aliengo import AliengoRSLEnvCfg
-        env_cfg = AliengoRSLEnvCfg()
-        env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
-        env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
-        # env_cfg.scene.height_scanner = None
-        # env_cfg.observations.policy.height_scan = None
-        sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
+        if cfg.policy == "legged_loco":
+            from simulation.scene.scene_aliengo_leggedLoco import AliengoLeggedEnvCfg
+            env_cfg = AliengoLeggedEnvCfg()
+            env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+            env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+            sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
+        else:
+            from simulation.scene.scene_aliengo import AliengoRSLEnvCfg
+            env_cfg = AliengoRSLEnvCfg()
+            env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+            env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+            # env_cfg.scene.height_scanner = None
+            # env_cfg.observations.policy.height_scan = None
+            sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
     print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
@@ -69,6 +76,9 @@ def run_simulator(cfg):
     if cfg.env_name == "tunnel":
         from simulation.terrain.hf_env import tunnel_terrain_single
         env_cfg.scene.terrain = tunnel_terrain_single
+    if cfg.env_name == "stairs":
+        from simulation.terrain.hf_env import stairs_terrain
+        env_cfg.scene.terrain = stairs_terrain
     elif cfg.env_name == "obstacle-dense":
         from simulation.terrain.hf_env import dense_obstacle_terrain
         env_cfg.scene.terrain = dense_obstacle_terrain
@@ -107,6 +117,11 @@ def run_simulator(cfg):
         env = HIMLocoEnvWrapper(env)
         from locomotion.policy.him_loco import load_policy_him
         policy = load_policy_him(robot_name=cfg.robot_name, device=cfg.policy_device)
+    elif cfg.policy == "legged_loco":
+        from locomotion.env_cfg.legged_env import LeggedLocoEnvWrapper
+        env = LeggedLocoEnvWrapper(env)
+        from locomotion.policy.legged_loco import load_policy_legged
+        policy = load_policy_legged(robot_name=cfg.robot_name, device=cfg.policy_device)
     elif cfg.policy == "wtw_loco":
         from locomotion.env_cfg.wtw_env import WTWLocoEnvWrapper
         # env_cfg.scene.legged_robot.init_state.joint_pos['.*L_hip_joint'] = 0.0

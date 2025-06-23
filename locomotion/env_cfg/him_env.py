@@ -11,9 +11,9 @@ class HIMLocoEnvWrapper(RslRlVecEnvWrapper):
         # self.obs_dim = 45
         self.base_idx = 9
         self.command_start = 0
-        # 用于对特定观测段做通道置换
+        # 用于对特定观测段做通道置换 Isaac Lab ==> Isaac Gym
         self.reverse_index_list = [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]
-        # 输出动作的维度反向映射（用于推理部署）
+        # 输出动作的维度反向映射（用于推理部署）Isaac Gym ==> Isaac Lab
         self.forward_index_list = [0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11]
 
         self.env_contains_height_scan = 'height_scan' in self.env.observation_manager.active_terms['policy']
