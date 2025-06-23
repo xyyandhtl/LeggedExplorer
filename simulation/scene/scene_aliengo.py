@@ -103,7 +103,7 @@ class AliengoSimCfg(InteractiveSceneCfg):
     print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
 
     # Aliengo foot contact sensor
-    # contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*_foot", history_length=3, track_air_time=True)
+    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*", history_length=3, track_air_time=True)
 
     height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Aliengo/trunk",
@@ -135,7 +135,7 @@ class ObservationsCfg:
         #                        params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
 
         # Note: himloco policy velocity command is ahead, wmp policy velocity command is behind
-        base_vel_cmd = ObsTerm(func=base_vel_cmd)
+        base_vel_cmd = ObsTerm(func=base_vel_cmd)  # him_loco的scale=(2,2,0.25)，但是y速度太大，y平移不稳定
 
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25,
                                params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
