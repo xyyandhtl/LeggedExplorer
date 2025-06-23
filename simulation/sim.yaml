@@ -6,7 +6,7 @@ robot_name: aliengo    # a1 go2 aliengo
 num_envs: 1
 
 # locomotion config
-policy: him_loco
+policy: him_loco  # him_loco / legged_loco
 policy_device: cuda:0
 
 # planner config
