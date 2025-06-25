@@ -135,7 +135,7 @@ class ObservationsCfg:
         #                        params={"asset_cfg": SceneEntityCfg(name="legged_robot")})
 
         # Note: himloco policy velocity command is ahead, wmp policy velocity command is behind
-        base_vel_cmd = ObsTerm(func=base_vel_cmd)  # him_loco的scale=(2,2,0.25)，但是y速度太大，y平移不稳定
+        base_vel_cmd = ObsTerm(func=base_vel_cmd, scale=(1, 1, 0.5))  # keyboard 输入的线、角速度分别为 2, 0.5
 
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25,
                                params={"asset_cfg": SceneEntityCfg(name="legged_robot")})

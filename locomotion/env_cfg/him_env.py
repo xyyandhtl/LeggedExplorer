@@ -11,6 +11,17 @@ class HIMLocoEnvWrapper(RslRlVecEnvWrapper):
         # self.obs_dim = 45
         self.base_idx = 9
         self.command_start = 0
+        """ dof_names
+                Isaac Gym:
+                    'FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint',
+                    'FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint',
+                    'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint',
+                    'RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint',
+                Isaac Sim / Isaac Lab:
+                    'FL_hip_joint',   'FR_hip_joint',   'RL_hip_joint',   'RR_hip_joint',
+                    'FL_thigh_joint', 'FR_thigh_joint', 'RL_thigh_joint', 'RR_thigh_joint',
+                    'FL_calf_joint',  'FR_calf_joint',  'RL_calf_joint',  'RR_calf_joint',
+        """
         # 用于对特定观测段做通道置换 Isaac Lab ==> Isaac Gym
         self.reverse_index_list = [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]
         # 输出动作的维度反向映射（用于推理部署）Isaac Gym ==> Isaac Lab
