@@ -133,22 +133,36 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel,
-                               params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
-                               noise=Unoise(n_min=-0.2, n_max=0.2),
+        base_ang_vel = ObsTerm(
+            func=mdp.base_ang_vel,
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
+            noise=Unoise(n_min=-0.2, n_max=0.2),
+            clip=(-100.0, 100.0),
+            scale=0.25,
        )
-        projected_gravity = ObsTerm(func=mdp.projected_gravity,
-                                    params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
-                                    noise=Unoise(n_min=-0.05, n_max=0.05),
+        projected_gravity = ObsTerm(
+            func=mdp.projected_gravity,
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
+            noise=Unoise(n_min=-0.05, n_max=0.05),
         )
-        base_vel_cmd = ObsTerm(func=base_vel_cmd)
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel,
-                            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
-                            noise=Unoise(n_min=-0.01, n_max=0.01),
+        base_vel_cmd = ObsTerm(
+            func=base_vel_cmd,
+            clip=(-100.0, 100.0),
+            scale=(1, 1, 0.5)
+        )  # keyboard 输入的线、角速度分别为 2, 0.5
+        joint_pos = ObsTerm(
+            func=mdp.joint_pos_rel,
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            noise=Unoise(n_min=-0.01, n_max=0.01),
+            clip=(-100.0, 100.0),
+            scale=1.0,
         )
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel,
-                            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
-                            noise=Unoise(n_min=-1.5, n_max=1.5),
+        joint_vel = ObsTerm(
+            func=mdp.joint_vel_rel,
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            noise=Unoise(n_min=-1.5, n_max=1.5),
+            clip=(-100.0, 100.0),
+            scale=0.05,
         )
         actions = ObsTerm(func=mdp.last_action)
 
@@ -189,23 +203,33 @@ class ObservationsCfg:
         base_ang_vel = ObsTerm(
             func=mdp.base_ang_vel,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
-            noise=Unoise(n_min=-0.2, n_max=0.2)
+            noise=Unoise(n_min=-0.2, n_max=0.2),
+            clip=(-100.0, 100.0),
+            scale=0.25,
         )
         projected_gravity = ObsTerm(
             func=mdp.projected_gravity,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
             noise=Unoise(n_min=-0.05, n_max=0.05),
         )
-        base_vel_cmd = ObsTerm(func=base_vel_cmd)
+        base_vel_cmd = ObsTerm(
+            func=base_vel_cmd,
+            clip=(-100.0, 100.0),
+            scale=(1, 1, 0.5)
+        )
         joint_pos = ObsTerm(
             func=mdp.joint_pos_rel,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
-            noise=Unoise(n_min=-0.01, n_max=0.01)
+            noise=Unoise(n_min=-0.01, n_max=0.01),
+            clip=(-100.0, 100.0),
+            scale=1.0,
         )
         joint_vel = ObsTerm(
             func=mdp.joint_vel_rel,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
-            noise=Unoise(n_min=-1.5, n_max=1.5)
+            noise=Unoise(n_min=-1.5, n_max=1.5),
+            clip=(-100.0, 100.0),
+            scale=0.05,
         )
         actions = ObsTerm(func=mdp.last_action)
 

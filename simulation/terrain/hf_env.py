@@ -1,10 +1,7 @@
 import isaaclab.terrains as terrain_gen
 import isaaclab.sim as sim_utils
-from isaaclab.terrains import TerrainImporterCfg, TerrainImporter
-from isaaclab.terrains import TerrainGeneratorCfg
-from isaaclab.terrains.terrain_generator import FlatPatchSamplingCfg
+from isaaclab.terrains import TerrainImporterCfg, TerrainImporter, TerrainGeneratorCfg, FlatPatchSamplingCfg
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils.configclass import configclass
 from isaaclab.terrains.height_field.hf_terrains_cfg import HfWaveTerrainCfg
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, ISAACLAB_NUCLEUS_DIR
