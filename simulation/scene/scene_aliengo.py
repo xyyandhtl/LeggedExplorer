@@ -110,7 +110,7 @@ class AliengoSimCfg(InteractiveSceneCfg):
         offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[5.0, 5.0]),
-        debug_vis=True,
+        debug_vis=False,
         mesh_prim_paths=["/World/Terrain"],
         max_distance=100.0,
     )

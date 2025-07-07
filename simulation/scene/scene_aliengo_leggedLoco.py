@@ -10,6 +10,7 @@ import isaaclab.sim as sim_utils
 import isaaclab.envs.mdp as mdp
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ManagerTermBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import SceneEntityCfg
@@ -42,28 +43,41 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.55),
+        pos=(0.0, 0.0, 0.50),
         joint_pos={
             ".*L_hip_joint": 0.1,
             ".*R_hip_joint": -0.1,
             "F[L,R]_thigh_joint": 0.8,
-            "R[L,R]_thigh_joint": 1.0,
+            "R[L,R]_thigh_joint": 0.8,
             ".*_calf_joint": -1.5,
-            # ".*L_hip_joint": 0.0,
-            # ".*R_hip_joint": -0.0,
-            # "F[L,R]_thigh_joint": 0.8,
-            # "R[L,R]_thigh_joint": 0.8,
-            # ".*_calf_joint": -1.5,
         },
         joint_vel={".*": 0.0},
     ),
     soft_joint_pos_limit_factor=0.9,
     actuators={
-        "base_legs": DCMotorCfg(
-            joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
+        "hip": DCMotorCfg(
+            joint_names_expr=[".*_hip_joint"],
+            effort_limit=44.0,
+            saturation_effort=44.0,
+            velocity_limit=20.0,
+            stiffness=40.0,
+            damping=2.0,
+            friction=0.0,
+        ),
+        "thigh": DCMotorCfg(
+            joint_names_expr=[".*_thigh_joint"],
+            effort_limit=44.0,
+            saturation_effort=44.0,
+            velocity_limit=20.0,
+            stiffness=40.0,
+            damping=2.0,
+            friction=0.0,
+        ),
+        "calf": DCMotorCfg(
+            joint_names_expr=[".*_calf_joint"],
             effort_limit=55.0,
             saturation_effort=55.0,
-            velocity_limit=20.0,
+            velocity_limit=15.0,
             stiffness=40.0,
             damping=2.0,
             friction=0.0,
@@ -100,7 +114,9 @@ class AliengoSimCfg(InteractiveSceneCfg):
 
     # Aliengo Robot
     legged_robot: ArticulationCfg = UNITREE_Aliengo_CFG
-    print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
+    print('hip_joint_names_expr:', legged_robot.actuators["hip"].joint_names_expr)
+    print('thigh_joint_names_expr:', legged_robot.actuators["thigh"].joint_names_expr)
+    print('calf_joint_names_expr:', legged_robot.actuators["calf"].joint_names_expr)
 
     # Aliengo foot contact sensor
     contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*", history_length=3, track_air_time=True)
@@ -267,6 +283,33 @@ class CommandsCfg:
             heading=(-math.pi, math.pi)),
     )
     target_pose.goal_pose_visualizer_cfg.markers["arrow"].scale = (1.0, 1.0, 4.0)
+
+
+@configclass
+class EventCfg:
+    randomize_reset_base = EventTerm(  # 随机更改env的base 位置、速度（ ± ）
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {
+                "x": (-0.5, 0.5),
+                "y": (-0.5, 0.5),
+                "z": (0.0, 0.0),
+                "roll": (1.57, 1.57),
+                "pitch": (0.0, 0.0),
+                "yaw": (-3.14, 3.14),
+            },
+            "velocity_range": {
+                "x": (-0.2, 0.2),
+                "y": (-0.2, 0.2),
+                "z": (-0.2, 0.2),
+                "roll": (-0.2, 0.2),
+                "pitch": (-0.2, 0.2),
+                "yaw": (-0.2, 0.2),
+            },
+            "asset_cfg": SceneEntityCfg(name="legged_robot")
+        },
+    )
 
 
 @configclass
