@@ -23,7 +23,6 @@ from simulation.agent.agent_ctrl import base_vel_cmd
 
 from .common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
 
-# todo: modify aliengo configs
 UNITREE_Aliengo_CFG = ArticulationCfg(
     prim_path="{ENV_REGEX_NS}/Aliengo",
     spawn=sim_utils.UsdFileCfg(
@@ -135,9 +134,9 @@ class AliengoSimCfg(InteractiveSceneCfg):
 @configclass
 class ActionsCfg:
     """Action specifications for the environment."""
-    joint_pos = mdp.JointPositionActionCfg(asset_name="legged_robot",
-                                           joint_names=[".*"],  # todo: define joint_name seems useless, why?
-                                           scale=0.5)
+    joint_pos = mdp.JointPositionActionCfg(
+        asset_name="legged_robot", joint_names=[".*"], scale=0.5
+    )
 
 
 @configclass
@@ -160,6 +159,7 @@ class ObservationsCfg:
             func=mdp.projected_gravity,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
             noise=Unoise(n_min=-0.05, n_max=0.05),
+            scale=1.0,
         )
         base_vel_cmd = ObsTerm(
             func=base_vel_cmd,
@@ -180,8 +180,11 @@ class ObservationsCfg:
             clip=(-100.0, 100.0),
             scale=0.05,
         )
-        actions = ObsTerm(func=mdp.last_action)
-
+        actions = ObsTerm(
+            func=mdp.last_action,
+            clip=(-100.0, 100.0),
+            scale=1.0
+        )
 
         # @configclass
         # class PlannerPolicyCfg(ObsGroup):
@@ -200,12 +203,13 @@ class ObservationsCfg:
             params={"command_name": "target_pose"}, scale=1 / math.pi
         )
 
-        height_scan = ObsTerm(func=mdp.height_scan, scale=1,
-                              params={"sensor_cfg": SceneEntityCfg("height_scanner"),
-                                      # "offset": 0.26878},
-                                      "offset": 0.5 + 0.3},  # estimated robot base height
-                              clip=(-1.0, 1.0),
-        )
+        # height_scan = ObsTerm(
+        #     func=mdp.height_scan,
+        #     params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+        #     noise=Unoise(n_min=-0.1, n_max=0.1),
+        #     clip=(-1.0, 1.0),
+        #     scale=1.0,
+        # )
 
         def __post_init__(self) -> None:
             self.enable_corruption = False

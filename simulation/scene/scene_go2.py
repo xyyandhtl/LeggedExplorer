@@ -1,5 +1,5 @@
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab_assets.unitree import UNITREE_GO2_CFG
+from isaaclab_assets.robots.unitree import UNITREE_GO2_CFG
 from isaaclab.sensors import RayCasterCfg, patterns, ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg

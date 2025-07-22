@@ -36,7 +36,7 @@ def run_simulator(cfg):
     if cfg.robot_name == 'go2':
         from simulation.scene.scene_go2 import Go2RSLEnvCfg
         env_cfg = Go2RSLEnvCfg()
-        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
+        print(f'[{cfg.robot_name} env_cfg robot]: {env_cfg.scene.legged_robot}')
         # sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
     elif cfg.robot_name == 'a1':
         from simulation.scene.scene_a1 import A1RSLEnvCfg
@@ -61,7 +61,7 @@ def run_simulator(cfg):
             sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
-    print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
+    print(f'[{cfg.robot_name} env_cfg robot]: {env_cfg.scene.legged_robot}')
     env_cfg.scene.num_envs = cfg.num_envs
     env_cfg.decimation = math.ceil(1. / env_cfg.sim.dt / cfg.camera_freq)
     print(f'[sim.dt]: {env_cfg.sim.dt}')
@@ -101,8 +101,8 @@ def run_simulator(cfg):
     # ===============================================================================================
     # Environment construct
     env = ManagerBasedRLEnv(env_cfg)
-    print("env.observation_manager.group_obs_term_dim", env.observation_manager.group_obs_term_dim)
-    print("env.observation_manager.active_terms", env.observation_manager.active_terms['policy'])
+    print("[env.observation_manager.group_obs_term_dim]: ", env.observation_manager.group_obs_term_dim)
+    print("[env.observation_manager.active_terms]: ", env.observation_manager.active_terms['policy'])
 
     # ===============================================================================================
     # locomotion policy setup

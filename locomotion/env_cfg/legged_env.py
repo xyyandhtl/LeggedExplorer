@@ -70,7 +70,7 @@ class LeggedLocoEnvWrapper(RslRlVecEnvWrapper):
                 self.proprio_obs_buf[:, :-1],
             ], dim=1)
         )
-        proprio_obs_history = self.proprio_obs_buf.view(self.num_envs, -1)  # (num_envs, 9*45)
+        proprio_obs_history = self.proprio_obs_buf.view(self.num_envs, -1)  # (num_envs, 5*45)
         # (num_envs, 45 + 5*45) : 新的观测 + 5个本体观测
         curr_obs = torch.cat([obs, proprio_obs_history], dim=1)
         extras["observations"]["policy"] = curr_obs
