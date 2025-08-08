@@ -45,25 +45,43 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.45),
         joint_pos={
-            ".*L_hip_joint": 0.1,
-            ".*R_hip_joint": -0.1,
+            ".*L_hip_joint": 0.0,
+            ".*R_hip_joint": -0.0,
             "F[L,R]_thigh_joint": 0.8,
-            "R[L,R]_thigh_joint": 1.0,
+            "R[L,R]_thigh_joint": 0.8,
             ".*_calf_joint": -1.5,
         },
         joint_vel={".*": 0.0},
     ),
     soft_joint_pos_limit_factor=0.9,
     actuators={
-        "base_legs": DCMotorCfg(
-            joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
-            effort_limit=55,    # refer to Aliengo urdf
-            saturation_effort=55,
+        "hip": DCMotorCfg(
+            joint_names_expr=[".*_hip_joint"],
+            effort_limit=44.0,
+            saturation_effort=44.0,
             velocity_limit=20.0,
             stiffness=40.0,
             damping=2.0,
             friction=0.0,
         ),
+        "thigh": DCMotorCfg(
+            joint_names_expr=[".*_thigh_joint"],
+            effort_limit=44.0,
+            saturation_effort=44.0,
+            velocity_limit=20.0,
+            stiffness=40.0,
+            damping=2.0,
+            friction=0.0,
+        ),
+        "calf": DCMotorCfg(
+            joint_names_expr=[".*_calf_joint"],
+            effort_limit=55.0,
+            saturation_effort=55.0,
+            velocity_limit=15.0,
+            stiffness=40.0,
+            damping=2.0,
+            friction=0.0,
+        )
     },
 )
 
@@ -95,7 +113,6 @@ class AliengoSimCfg(InteractiveSceneCfg):
 
     # Aliengo Robot
     legged_robot: ArticulationCfg = UNITREE_Aliengo_CFG
-    print('joint_names_expr:', legged_robot.actuators["base_legs"].joint_names_expr)
 
     # Aliengo foot contact sensor
     contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*", history_length=3, track_air_time=True)
@@ -178,9 +195,12 @@ class CommandsCfg:
     base_vel_cmd = mdp.UniformVelocityCommandCfg(
         asset_name="legged_robot",
         resampling_time_range=(0.0, 0.0),
+        heading_command=True,
+        rel_heading_envs=1.0,
+        heading_control_stiffness=0.5,
         debug_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0), heading=(0, 0)
+            lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0), heading=(-math.pi, math.pi)
         ),
     )
 

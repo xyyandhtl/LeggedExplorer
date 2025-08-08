@@ -165,7 +165,7 @@ class ObservationsCfg:
             func=base_vel_cmd,
             clip=(-100.0, 100.0),
             scale=(1, 1, 0.5)
-        )  # keyboard 输入的线、角速度分别为 2, 0.5
+        )  # keyboard 输入的线、角速度分别为 2, 0.5, 因此实际为 (2, 2, 0.25)，与训练时一致
         joint_pos = ObsTerm(
             func=mdp.joint_pos_rel,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
@@ -269,10 +269,12 @@ class CommandsCfg:
     base_vel_cmd = mdp.UniformVelocityCommandCfg(
         asset_name="legged_robot",
         resampling_time_range=(0.0, 0.0),
-        rel_heading_envs=0.0,
+        heading_command=True,
+        rel_heading_envs=1.0,
+        heading_control_stiffness=0.5,
         debug_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0)
+            lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0), heading=(-math.pi, math.pi)
         ),
     )
 
