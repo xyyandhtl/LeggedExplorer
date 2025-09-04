@@ -36,8 +36,18 @@ def run_simulator(cfg):
     if cfg.robot_name == 'go2':
         from simulation.scene.scene_go2 import Go2RSLEnvCfg
         env_cfg = Go2RSLEnvCfg()
-        print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
+        print(f'[{cfg.robot_name} env_cfg robot]: {env_cfg.scene.legged_robot}')
         # sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
+    elif cfg.robot_name == 'go2w':
+        if cfg.policy == "legged_loco":
+            from simulation.scene.scene_go2w_lab import Go2WLeggedEnvCfg
+            env_cfg = Go2WLeggedEnvCfg()
+        else:
+            raise NotImplementedError(f'[{cfg.policy}] policy has not been implemented yet')
+
+        env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+        sm = agent_sensors.SensorManager(cfg.num_envs, 'Go2W')
     elif cfg.robot_name == 'a1':
         from simulation.scene.scene_a1 import A1RSLEnvCfg
         env_cfg = A1RSLEnvCfg()
@@ -46,22 +56,20 @@ def run_simulator(cfg):
         sm = agent_sensors.SensorManager(cfg.num_envs, 'A1')
     elif cfg.robot_name == 'aliengo':
         if cfg.policy == "legged_loco":
-            from simulation.scene.scene_aliengo_leggedLoco import AliengoLeggedEnvCfg
+            from simulation.scene.scene_aliengo_lab import AliengoLeggedEnvCfg
             env_cfg = AliengoLeggedEnvCfg()
-            env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
-            env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
-            sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
-        else:
+        elif cfg.policy == 'him_loco':
             from simulation.scene.scene_aliengo import AliengoRSLEnvCfg
             env_cfg = AliengoRSLEnvCfg()
-            env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
-            env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
-            # env_cfg.scene.height_scanner = None
-            # env_cfg.observations.policy.height_scan = None
-            sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
+        else:
+            raise NotImplementedError(f'[{cfg.policy}] policy has not been implemented yet')
+
+        env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+        sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
-    print(f'{cfg.robot_name} env_cfg robot: {env_cfg.scene.legged_robot}')
+    print(f'[{cfg.robot_name} env_cfg robot]: {env_cfg.scene.legged_robot}')
     env_cfg.scene.num_envs = cfg.num_envs
     env_cfg.decimation = math.ceil(1. / env_cfg.sim.dt / cfg.camera_freq)
     print(f'[sim.dt]: {env_cfg.sim.dt}')
@@ -101,8 +109,12 @@ def run_simulator(cfg):
     # ===============================================================================================
     # Environment construct
     env = ManagerBasedRLEnv(env_cfg)
-    print("env.observation_manager.group_obs_term_dim", env.observation_manager.group_obs_term_dim)
-    print("env.observation_manager.active_terms", env.observation_manager.active_terms['policy'])
+    print(f"[INFO] joint names (IsaacLab Default): {env.scene['legged_robot'].joint_names}")
+    print(f"[INFO] joint_pos names (IsaacLab Actual): {env.action_manager.get_term('joint_pos')._joint_names}")
+    if hasattr(env_cfg.actions, 'joint_vel'):
+        print(f"[INFO] joint_vel names (IsaacLab Actual): {env.action_manager.get_term('joint_vel')._joint_names}")
+    print("[INFO] env.observation_manager.active_terms[policy]: ", env.observation_manager.active_terms['policy'])
+    print("[INFO] env.observation_manager.group_obs_term_dim: ", env.observation_manager.group_obs_term_dim)
 
     # ===============================================================================================
     # locomotion policy setup
@@ -118,8 +130,15 @@ def run_simulator(cfg):
         from locomotion.policy.him_loco import load_policy_him
         policy = load_policy_him(robot_name=cfg.robot_name, device=cfg.policy_device)
     elif cfg.policy == "legged_loco":
-        from locomotion.env_cfg.legged_env import LeggedLocoEnvWrapper
-        env = LeggedLocoEnvWrapper(env)
+        if cfg.robot_name == "aliengo":
+            from locomotion.env_cfg.legged_env import LeggedLocoEnvWrapper
+            env = LeggedLocoEnvWrapper(env)
+        elif cfg.robot_name == "go2w":
+            from locomotion.env_cfg.legged_env import LeggedLocoGo2WEnvWrapper
+            env = LeggedLocoGo2WEnvWrapper(env)
+        else:
+            raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
+
         from locomotion.policy.legged_loco import load_policy_legged
         policy = load_policy_legged(robot_name=cfg.robot_name, device=cfg.policy_device)
     elif cfg.policy == "wtw_loco":
@@ -190,7 +209,7 @@ def run_simulator(cfg):
     obs, _ = env.reset()
     # obs_list = obs.cpu().numpy().tolist()[0]
     # obs_list = ["{:.3f}".format(v) for v in obs_list]
-    print(f'[init obs shape]: {obs.shape}')
+    print(f'[INFO] init_obs shape: {obs.shape}')
 
     if cfg.policy == "wmp_loco":
         # init world_model data

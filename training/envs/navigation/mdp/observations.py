@@ -8,10 +8,12 @@ import torch
 
 from .actions import NavigationAction
 
+from isaaclab.assets import Articulation
+from isaaclab.managers import SceneEntityCfg
 # from isaaclab.command_generators import UniformPoseCommandGenerator
 
 if TYPE_CHECKING:
-    from isaaclab.envs import ManagerBasedRLEnv
+    from isaaclab.envs import ManagerBasedEnv, ManagerBasedRLEnv
 
 
 def angle_to_target_observation(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
@@ -62,3 +64,16 @@ def low_level_actions(env: ManagerBasedRLEnv) -> torch.Tensor:
     action_term: NavigationAction = env.action_manager.get_term('actions')
 
     return action_term.low_level_actions.clone()
+
+
+def joint_pos_rel_without_wheel(
+    env: ManagerBasedEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    wheel_asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """The joint positions of the asset w.r.t. the default joint positions.(Without the wheel joints)"""
+    # extract the used quantities (to enable type-hinting)
+    asset: Articulation = env.scene[asset_cfg.name]
+    joint_pos_rel = asset.data.joint_pos[:, asset_cfg.joint_ids] - asset.data.default_joint_pos[:, asset_cfg.joint_ids]
+    joint_pos_rel[:, wheel_asset_cfg.joint_ids] = 0
+    return joint_pos_rel

@@ -1,7 +1,7 @@
 import os
 import math
 
-from isaaclab.actuators import DCMotorCfg, DelayedPDActuatorCfg
+from isaaclab.actuators import DCMotorCfg, DelayedPDActuatorCfg, ImplicitActuatorCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import RayCasterCfg, patterns, ContactSensorCfg
 from isaaclab.utils import configclass
@@ -23,11 +23,25 @@ from simulation.agent.agent_ctrl import base_vel_cmd
 
 from .common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
 
-# todo: modify aliengo configs
-UNITREE_Aliengo_CFG = ArticulationCfg(
-    prim_path="{ENV_REGEX_NS}/Aliengo",
+
+GO2W_LEG_JOINT_NAMES = [
+    "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+    "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+    "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
+    "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
+]
+
+GO2W_WHEEL_JOINT_NAMES = [
+    "FR_foot_joint", "FL_foot_joint", "RR_foot_joint", "RL_foot_joint",
+]
+
+GO2W_JOINT_NAMES = GO2W_LEG_JOINT_NAMES + GO2W_WHEEL_JOINT_NAMES
+
+
+UNITREE_GO2W_CFG = ArticulationCfg(
+    prim_path="{ENV_REGEX_NS}/Go2W",
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"{os.getenv('USER_PATH_TO_USD')}/robots/aliengo/aliengo.usd",
+        usd_path=f"{os.getenv('USER_PATH_TO_USD')}/robots/go2w/go2w.usd",
         activate_contact_sensors=True,
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=False,
@@ -43,56 +57,47 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.50),
+        pos=(0.0, 0.0, 0.45),
         joint_pos={
-            ".*L_hip_joint": 0.1,
-            ".*R_hip_joint": -0.1,
-            "F[L,R]_thigh_joint": 0.8,
-            "R[L,R]_thigh_joint": 0.8,
+            ".*L_hip_joint": 0.0,
+            ".*R_hip_joint": -0.0,
+            "F.*_thigh_joint": 0.8,
+            "R.*_thigh_joint": 0.8,
             ".*_calf_joint": -1.5,
+            ".*_foot_joint": 0.0,
         },
         joint_vel={".*": 0.0},
     ),
     soft_joint_pos_limit_factor=0.9,
     actuators={
-        "hip": DCMotorCfg(
-            joint_names_expr=[".*_hip_joint"],
-            effort_limit=44.0,
-            saturation_effort=44.0,
-            velocity_limit=20.0,
-            stiffness=40.0,
-            damping=2.0,
+        "legs": DCMotorCfg(
+            joint_names_expr=["^(?!.*_foot_joint).*"],
+            effort_limit=23.5,
+            saturation_effort=23.5,
+            velocity_limit=30.0,
+            stiffness=25.0,
+            damping=0.5,
             friction=0.0,
         ),
-        "thigh": DCMotorCfg(
-            joint_names_expr=[".*_thigh_joint"],
-            effort_limit=44.0,
-            saturation_effort=44.0,
-            velocity_limit=20.0,
-            stiffness=40.0,
-            damping=2.0,
+        "wheels": ImplicitActuatorCfg(
+            joint_names_expr=[".*_foot_joint"],
+            effort_limit_sim=23.5,
+            velocity_limit_sim=30.0,
+            stiffness=0.0,
+            damping=0.5,
             friction=0.0,
         ),
-        "calf": DCMotorCfg(
-            joint_names_expr=[".*_calf_joint"],
-            effort_limit=55.0,
-            saturation_effort=55.0,
-            velocity_limit=15.0,
-            stiffness=40.0,
-            damping=2.0,
-            friction=0.0,
-        )
     },
 )
 
 
 @configclass
-class AliengoSimCfg(InteractiveSceneCfg):
+class Go2WSimCfg(InteractiveSceneCfg):
     # ground plane
     # ground = AssetBaseCfg(prim_path="/World/ground",
     #                       spawn=sim_utils.GroundPlaneCfg(color=(0.1, 0.1, 0.1), size=(300., 300.)),
     #                       init_state=AssetBaseCfg.InitialStateCfg(
-    #                           pos=(0, 0, 0.02)
+    #                           pos=(0, 0, 1e-4)
     #                       ))
 
     # Lights
@@ -112,18 +117,15 @@ class AliengoSimCfg(InteractiveSceneCfg):
     )
     cylinder_light.init_state.pos = (0, 0, 2.0)
 
-    # Aliengo Robot
-    legged_robot: ArticulationCfg = UNITREE_Aliengo_CFG
-    print('hip_joint_names_expr:', legged_robot.actuators["hip"].joint_names_expr)
-    print('thigh_joint_names_expr:', legged_robot.actuators["thigh"].joint_names_expr)
-    print('calf_joint_names_expr:', legged_robot.actuators["calf"].joint_names_expr)
+    # Go2W Robot
+    legged_robot: ArticulationCfg = UNITREE_GO2W_CFG.replace(prim_path="{ENV_REGEX_NS}/Go2W")
 
-    # Aliengo foot contact sensor
-    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*", history_length=3, track_air_time=True)
+    # Go2W foot contact sensor
+    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Go2W/.*", history_length=3, track_air_time=True)
 
     height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Aliengo/base",
-        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 0.5]),
+        prim_path="{ENV_REGEX_NS}/Go2W/base",
+        offset=RayCasterCfg.OffsetCfg(pos=[0.0, 0.0, 20.0]),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
         debug_vis=True,
@@ -135,9 +137,22 @@ class AliengoSimCfg(InteractiveSceneCfg):
 @configclass
 class ActionsCfg:
     """Action specifications for the environment."""
-    joint_pos = mdp.JointPositionActionCfg(asset_name="legged_robot",
-                                           joint_names=[".*"],  # todo: define joint_name seems useless, why?
-                                           scale=0.5)
+    joint_pos = mdp.JointPositionActionCfg(
+        asset_name="legged_robot",
+        joint_names=GO2W_LEG_JOINT_NAMES,
+        scale={".*_hip_joint": 0.125, "^(?!.*_hip_joint).*": 0.25},
+        use_default_offset=True,
+        clip={".*": (-100.0, 100.0)},
+        preserve_order=True
+    )
+    joint_vel = mdp.JointVelocityActionCfg(
+        asset_name="legged_robot",
+        joint_names=GO2W_WHEEL_JOINT_NAMES,
+        scale=5.0,
+        use_default_offset=True,
+        clip={".*": (-100.0, 100.0)},
+        preserve_order=True
+    )
 
 
 @configclass
@@ -160,6 +175,8 @@ class ObservationsCfg:
             func=mdp.projected_gravity,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
             noise=Unoise(n_min=-0.05, n_max=0.05),
+            clip=(-100.0, 100.0),
+            scale=1.0,
         )
         base_vel_cmd = ObsTerm(
             func=base_vel_cmd,
@@ -167,21 +184,27 @@ class ObservationsCfg:
             scale=(1, 1, 0.5)
         )  # keyboard 输入的线、角速度分别为 2, 0.5
         joint_pos = ObsTerm(
-            func=mdp.joint_pos_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            func=user_mdp.joint_pos_rel_without_wheel,
+            params={
+                "asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=GO2W_JOINT_NAMES, preserve_order=True),
+                "wheel_asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=GO2W_WHEEL_JOINT_NAMES),
+            },
             noise=Unoise(n_min=-0.01, n_max=0.01),
             clip=(-100.0, 100.0),
             scale=1.0,
         )
         joint_vel = ObsTerm(
             func=mdp.joint_vel_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=GO2W_JOINT_NAMES, preserve_order=True)},
             noise=Unoise(n_min=-1.5, n_max=1.5),
             clip=(-100.0, 100.0),
             scale=0.05,
         )
-        actions = ObsTerm(func=mdp.last_action)
-
+        actions = ObsTerm(
+            func=mdp.last_action,
+            clip=(-100.0, 100.0),
+            scale=1.0
+        )
 
         # @configclass
         # class PlannerPolicyCfg(ObsGroup):
@@ -200,12 +223,13 @@ class ObservationsCfg:
             params={"command_name": "target_pose"}, scale=1 / math.pi
         )
 
-        height_scan = ObsTerm(func=mdp.height_scan, scale=1,
-                              params={"sensor_cfg": SceneEntityCfg("height_scanner"),
-                                      # "offset": 0.26878},
-                                      "offset": 0.5 + 0.3},  # estimated robot base height
-                              clip=(-1.0, 1.0),
-        )
+        # height_scan = ObsTerm(
+        #     func=mdp.height_scan,
+        #     params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+        #     noise=Unoise(n_min=-0.1, n_max=0.1),
+        #     clip=(-1.0, 1.0),
+        #     scale=1.0,
+        # )
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -234,20 +258,27 @@ class ObservationsCfg:
             scale=(1, 1, 0.5)
         )
         joint_pos = ObsTerm(
-            func=mdp.joint_pos_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            func=user_mdp.joint_pos_rel_without_wheel,
+            params={
+                "asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=GO2W_JOINT_NAMES, preserve_order=True),
+                "wheel_asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=GO2W_WHEEL_JOINT_NAMES),
+            },
             noise=Unoise(n_min=-0.01, n_max=0.01),
             clip=(-100.0, 100.0),
             scale=1.0,
         )
         joint_vel = ObsTerm(
             func=mdp.joint_vel_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=GO2W_JOINT_NAMES, preserve_order=True)},
             noise=Unoise(n_min=-1.5, n_max=1.5),
             clip=(-100.0, 100.0),
             scale=0.05,
         )
-        actions = ObsTerm(func=mdp.last_action)
+        actions = ObsTerm(
+            func=mdp.last_action,
+            clip=(-100.0, 100.0),
+            scale=1.0
+        )
 
         def __post_init__(self):
             self.enable_corruption = False
@@ -265,10 +296,12 @@ class CommandsCfg:
     base_vel_cmd = mdp.UniformVelocityCommandCfg(
         asset_name="legged_robot",
         resampling_time_range=(0.0, 0.0),
-        rel_heading_envs=0.0,
+        heading_command=True,
+        rel_heading_envs=1.0,
+        heading_control_stiffness=0.5,
         debug_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0)
+            lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0), heading=(-math.pi, math.pi)
         ),
     )
 
@@ -295,17 +328,17 @@ class EventCfg:
                 "x": (-0.5, 0.5),
                 "y": (-0.5, 0.5),
                 "z": (0.0, 0.0),
-                "roll": (1.57, 1.57),
+                "roll": (2.88, 3.14),
                 "pitch": (0.0, 0.0),
                 "yaw": (-3.14, 3.14),
             },
             "velocity_range": {
-                "x": (-0.2, 0.2),
-                "y": (-0.2, 0.2),
-                "z": (-0.2, 0.2),
-                "roll": (-0.2, 0.2),
-                "pitch": (-0.2, 0.2),
-                "yaw": (-0.2, 0.2),
+                "x": (-0.5, 0.5),
+                "y": (-0.5, 0.5),
+                "z": (-0.5, 0.5),
+                "roll": (-0.5, 0.5),
+                "pitch": (-0.5, 0.5),
+                "yaw": (-0.5, 0.5),
             },
             "asset_cfg": SceneEntityCfg(name="legged_robot")
         },
@@ -313,10 +346,10 @@ class EventCfg:
 
 
 @configclass
-class AliengoLeggedEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the Aliengo environment."""
+class Go2WLeggedEnvCfg(ManagerBasedRLEnvCfg):
+    """Configuration for the Go2W environment."""
     # scene settings
-    scene = AliengoSimCfg(num_envs=1, env_spacing=2.0)
+    scene = Go2WSimCfg(num_envs=1, env_spacing=2.0)
 
     # basic settings
     observations = ObservationsCfg()
