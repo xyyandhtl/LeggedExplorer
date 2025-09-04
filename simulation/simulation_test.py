@@ -38,6 +38,16 @@ def run_simulator(cfg):
         env_cfg = Go2RSLEnvCfg()
         print(f'[{cfg.robot_name} env_cfg robot]: {env_cfg.scene.legged_robot}')
         # sm = agent_sensors.SensorManagerGo2(cfg.num_envs)
+    elif cfg.robot_name == 'go2w':
+        if cfg.policy == "legged_loco":
+            from simulation.scene.scene_go2w_lab import Go2WLeggedEnvCfg
+            env_cfg = Go2WLeggedEnvCfg()
+        else:
+            raise NotImplementedError(f'[{cfg.policy}] policy has not been implemented yet')
+
+        env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+        sm = agent_sensors.SensorManager(cfg.num_envs, 'Go2W')
     elif cfg.robot_name == 'a1':
         from simulation.scene.scene_a1 import A1RSLEnvCfg
         env_cfg = A1RSLEnvCfg()
@@ -120,8 +130,15 @@ def run_simulator(cfg):
         from locomotion.policy.him_loco import load_policy_him
         policy = load_policy_him(robot_name=cfg.robot_name, device=cfg.policy_device)
     elif cfg.policy == "legged_loco":
-        from locomotion.env_cfg.legged_env import LeggedLocoEnvWrapper
-        env = LeggedLocoEnvWrapper(env)
+        if cfg.robot_name == "aliengo":
+            from locomotion.env_cfg.legged_env import LeggedLocoEnvWrapper
+            env = LeggedLocoEnvWrapper(env)
+        elif cfg.robot_name == "go2w":
+            from locomotion.env_cfg.legged_env import LeggedLocoGo2WEnvWrapper
+            env = LeggedLocoGo2WEnvWrapper(env)
+        else:
+            raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
+
         from locomotion.policy.legged_loco import load_policy_legged
         policy = load_policy_legged(robot_name=cfg.robot_name, device=cfg.policy_device)
     elif cfg.policy == "wtw_loco":

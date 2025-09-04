@@ -1,12 +1,12 @@
 defaults:
   - _self_
 
-test_level: 1     # 0-'locomotion_level' 1-'local_planner_level' 2-'system_level'
-robot_name: aliengo    # a1 go2 aliengo
+test_level: 0     # 0-'locomotion_level' 1-'local_planner_level' 2-'system_level'
+robot_name: go2w    # a1, go2, go2w, aliengo
 num_envs: 1
 
 # locomotion config
-policy: him_loco  # him_loco / legged_loco
+policy: legged_loco  # him_loco, legged_loco
 policy_device: cuda:0
 
 # planner config
