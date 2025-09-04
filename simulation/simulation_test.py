@@ -48,17 +48,15 @@ def run_simulator(cfg):
         if cfg.policy == "legged_loco":
             from simulation.scene.scene_aliengo_lab import AliengoLeggedEnvCfg
             env_cfg = AliengoLeggedEnvCfg()
-            env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
-            env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
-            sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
-        else:
+        elif cfg.policy == 'him_loco':
             from simulation.scene.scene_aliengo import AliengoRSLEnvCfg
             env_cfg = AliengoRSLEnvCfg()
-            env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
-            env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
-            # env_cfg.scene.height_scanner = None
-            # env_cfg.observations.policy.height_scan = None
-            sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
+        else:
+            raise NotImplementedError(f'[{cfg.policy}] policy has not been implemented yet')
+
+        env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
+        env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
+        sm = agent_sensors.SensorManager(cfg.num_envs, 'Aliengo')
     else:
         raise NotImplementedError(f'[{cfg.robot_name}] env has not been implemented yet')
     print(f'[{cfg.robot_name} env_cfg robot]: {env_cfg.scene.legged_robot}')
@@ -103,6 +101,8 @@ def run_simulator(cfg):
     env = ManagerBasedRLEnv(env_cfg)
     print(f"[INFO] joint names (IsaacLab Default): {env.scene['legged_robot'].joint_names}")
     print(f"[INFO] joint_pos names (IsaacLab Actual): {env.action_manager.get_term('joint_pos')._joint_names}")
+    if hasattr(env_cfg.actions, 'joint_vel'):
+        print(f"[INFO] joint_vel names (IsaacLab Actual): {env.action_manager.get_term('joint_vel')._joint_names}")
     print("[INFO] env.observation_manager.active_terms[policy]: ", env.observation_manager.active_terms['policy'])
     print("[INFO] env.observation_manager.group_obs_term_dim: ", env.observation_manager.group_obs_term_dim)
 
