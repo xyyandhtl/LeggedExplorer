@@ -15,19 +15,26 @@ class LeggedLocoEnvWrapper(RslRlVecEnvWrapper):
         self.obs_pos_start_idx = 9
         """ dof_names
                 Legged-Loco:
-                    'FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint'
-                    'FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint'
-                    'RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint'
-                    'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint'
-                Isaac Sim / Isaac Lab:
-                    'FL_hip_joint',   'FR_hip_joint',   'RL_hip_joint',   'RR_hip_joint',
-                    'FL_thigh_joint', 'FR_thigh_joint', 'RL_thigh_joint', 'RR_thigh_joint',
-                    'FL_calf_joint',  'FR_calf_joint',  'RL_calf_joint',  'RR_calf_joint',
+                    0 'FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint'
+                    3 'FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint'
+                    6 'RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint'
+                    9 'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint'
+                IsaacLab Default:
+                    0 'FL_hip_joint',   'FR_hip_joint',   'RL_hip_joint',   'RR_hip_joint',
+                    4 'FL_thigh_joint', 'FR_thigh_joint', 'RL_thigh_joint', 'RR_thigh_joint',
+                    8 'FL_calf_joint',  'FR_calf_joint',  'RL_calf_joint',  'RR_calf_joint',
+                IsaacLab Actual (because assign joint_names list in scene_aliengo_lab, and set preserve_order=True. Otherwise, order is default):
+                    0 'FR_hip_joint', 'FR_thigh_joint', 'FR_calf_joint'
+                    3 'FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint'
+                    6 'RR_hip_joint', 'RR_thigh_joint', 'RR_calf_joint'
+                    9 'RL_hip_joint', 'RL_thigh_joint', 'RL_calf_joint'
                 """
         # 用于对特定观测段做通道置换 Isaac Lab ==> Legged-Loco
-        self.reverse_index_list = [1, 5, 9, 0, 4, 8, 3, 7, 11, 2, 6, 10]
+        # self.reverse_index_list = [1, 5, 9, 0, 4, 8, 3, 7, 11, 2, 6, 10]
+        self.reverse_index_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         # 输出动作的维度反向映射（用于推理部署）Legged-Loco ==> Isaac Lab
-        self.forward_index_list = [3, 0, 9, 6, 4, 1, 10, 7, 5, 2, 11, 8]
+        # self.forward_index_list = [3, 0, 9, 6, 4, 1, 10, 7, 5, 2, 11, 8]
+        self.forward_index_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
         self.env_contains_height_scan = 'height_scan' in self.env.observation_manager.active_terms['policy']
         if self.env_contains_height_scan:

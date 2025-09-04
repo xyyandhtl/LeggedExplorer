@@ -23,6 +23,13 @@ from simulation.agent.agent_ctrl import base_vel_cmd
 
 from .common import EventCfg, RewardsCfg, TerminationsCfg, CurriculumCfg
 
+ALIENGO_JOINT_NAMES = [
+    "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+    "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+    "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
+    "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
+]
+
 UNITREE_Aliengo_CFG = ArticulationCfg(
     prim_path="{ENV_REGEX_NS}/Aliengo",
     spawn=sim_utils.UsdFileCfg(
@@ -44,8 +51,8 @@ UNITREE_Aliengo_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.50),
         joint_pos={
-            ".*L_hip_joint": 0.1,
-            ".*R_hip_joint": -0.1,
+            ".*L_hip_joint": 0.0,
+            ".*R_hip_joint": -0.0,
             "F[L,R]_thigh_joint": 0.8,
             "R[L,R]_thigh_joint": 0.8,
             ".*_calf_joint": -1.5,
@@ -112,10 +119,7 @@ class AliengoSimCfg(InteractiveSceneCfg):
     cylinder_light.init_state.pos = (0, 0, 2.0)
 
     # Aliengo Robot
-    legged_robot: ArticulationCfg = UNITREE_Aliengo_CFG
-    print('hip_joint_names_expr:', legged_robot.actuators["hip"].joint_names_expr)
-    print('thigh_joint_names_expr:', legged_robot.actuators["thigh"].joint_names_expr)
-    print('calf_joint_names_expr:', legged_robot.actuators["calf"].joint_names_expr)
+    legged_robot: ArticulationCfg = UNITREE_Aliengo_CFG.replace(prim_path="{ENV_REGEX_NS}/Aliengo")
 
     # Aliengo foot contact sensor
     contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Aliengo/.*", history_length=3, track_air_time=True)
@@ -135,7 +139,11 @@ class AliengoSimCfg(InteractiveSceneCfg):
 class ActionsCfg:
     """Action specifications for the environment."""
     joint_pos = mdp.JointPositionActionCfg(
-        asset_name="legged_robot", joint_names=[".*"], scale=0.5
+        asset_name="legged_robot",
+        joint_names=ALIENGO_JOINT_NAMES,
+        scale=0.5,
+        clip={".*": (-100.0, 100.0)},
+        preserve_order=True,
     )
 
 
@@ -159,6 +167,7 @@ class ObservationsCfg:
             func=mdp.projected_gravity,
             params={"asset_cfg": SceneEntityCfg(name="legged_robot")},
             noise=Unoise(n_min=-0.05, n_max=0.05),
+            clip=(-100.0, 100.0),
             scale=1.0,
         )
         base_vel_cmd = ObsTerm(
@@ -168,14 +177,14 @@ class ObservationsCfg:
         )  # keyboard 输入的线、角速度分别为 2, 0.5, 因此实际为 (2, 2, 0.25)，与训练时一致
         joint_pos = ObsTerm(
             func=mdp.joint_pos_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=ALIENGO_JOINT_NAMES, preserve_order=True)},
             noise=Unoise(n_min=-0.01, n_max=0.01),
             clip=(-100.0, 100.0),
             scale=1.0,
         )
         joint_vel = ObsTerm(
             func=mdp.joint_vel_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=ALIENGO_JOINT_NAMES, preserve_order=True)},
             noise=Unoise(n_min=-1.5, n_max=1.5),
             clip=(-100.0, 100.0),
             scale=0.05,
@@ -239,19 +248,23 @@ class ObservationsCfg:
         )
         joint_pos = ObsTerm(
             func=mdp.joint_pos_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=ALIENGO_JOINT_NAMES, preserve_order=True)},
             noise=Unoise(n_min=-0.01, n_max=0.01),
             clip=(-100.0, 100.0),
             scale=1.0,
         )
         joint_vel = ObsTerm(
             func=mdp.joint_vel_rel,
-            params={"asset_cfg": SceneEntityCfg(name="legged_robot", )},
+            params={"asset_cfg": SceneEntityCfg(name="legged_robot", joint_names=ALIENGO_JOINT_NAMES, preserve_order=True)},
             noise=Unoise(n_min=-1.5, n_max=1.5),
             clip=(-100.0, 100.0),
             scale=0.05,
         )
-        actions = ObsTerm(func=mdp.last_action)
+        actions = ObsTerm(
+            func=mdp.last_action,
+            clip=(-100.0, 100.0),
+            scale=1.0
+        )
 
         def __post_init__(self):
             self.enable_corruption = False
@@ -301,7 +314,7 @@ class EventCfg:
                 "x": (-0.5, 0.5),
                 "y": (-0.5, 0.5),
                 "z": (0.0, 0.0),
-                "roll": (1.57, 1.57),
+                "roll": (2.88, 3.14),
                 "pitch": (0.0, 0.0),
                 "yaw": (-3.14, 3.14),
             },

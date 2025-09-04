@@ -46,7 +46,7 @@ def run_simulator(cfg):
         sm = agent_sensors.SensorManager(cfg.num_envs, 'A1')
     elif cfg.robot_name == 'aliengo':
         if cfg.policy == "legged_loco":
-            from simulation.scene.scene_aliengo_leggedLoco import AliengoLeggedEnvCfg
+            from simulation.scene.scene_aliengo_lab import AliengoLeggedEnvCfg
             env_cfg = AliengoLeggedEnvCfg()
             env_cfg.scene.legged_robot.init_state.pos = tuple(cfg.init_pos)
             env_cfg.scene.legged_robot.init_state.rot = tuple(cfg.init_rot)
@@ -101,8 +101,10 @@ def run_simulator(cfg):
     # ===============================================================================================
     # Environment construct
     env = ManagerBasedRLEnv(env_cfg)
-    print("[env.observation_manager.group_obs_term_dim]: ", env.observation_manager.group_obs_term_dim)
-    print("[env.observation_manager.active_terms]: ", env.observation_manager.active_terms['policy'])
+    print(f"[INFO] joint names (IsaacLab Default): {env.scene['legged_robot'].joint_names}")
+    print(f"[INFO] joint_pos names (IsaacLab Actual): {env.action_manager.get_term('joint_pos')._joint_names}")
+    print("[INFO] env.observation_manager.active_terms[policy]: ", env.observation_manager.active_terms['policy'])
+    print("[INFO] env.observation_manager.group_obs_term_dim: ", env.observation_manager.group_obs_term_dim)
 
     # ===============================================================================================
     # locomotion policy setup
@@ -190,7 +192,7 @@ def run_simulator(cfg):
     obs, _ = env.reset()
     # obs_list = obs.cpu().numpy().tolist()[0]
     # obs_list = ["{:.3f}".format(v) for v in obs_list]
-    print(f'[init obs shape]: {obs.shape}')
+    print(f'[INFO] init_obs shape: {obs.shape}')
 
     if cfg.policy == "wmp_loco":
         # init world_model data
